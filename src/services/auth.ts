@@ -10,6 +10,11 @@ export interface PasswordLoginParams {
   password: string
 }
 
+export interface RefreshTokenParams {
+  userId: number
+  refreshToken: string
+}
+
 // ─── Response ───────────────────────────────────────────────────────────────
 
 export interface LoginResult {
@@ -32,4 +37,12 @@ export function loginByPassword(params: PasswordLoginParams) {
     ...params,
     platformType: PLATFORM_TYPE,
   })
+}
+
+/**
+ * 刷新 Token
+ * POST /Token/Refresh
+ */
+export function refreshTokenApi(params: RefreshTokenParams) {
+  return http.post<LoginResult>('/Token/Refresh', params)
 }

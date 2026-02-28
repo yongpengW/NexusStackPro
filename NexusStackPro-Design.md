@@ -171,7 +171,7 @@ src/
 ### 基础设施
 - [ ] **路由鉴权守卫**：在 `router/index.tsx` 封装 `<AuthGuard>` 组件，未登录时访问受保护路由自动跳转 `/user/login`；已登录时访问 `/user/login` 自动重定向首页
 - [ ] **权限控制（useAccess Hook）**：封装 `useAccess()` 根据 `userInfo` 返回权限对象（如 `{ isAdmin, canEdit }`），控制菜单、按钮、页面的可见性
-- [ ] **Token 自动刷新机制**：`request.ts` 收到 401 时，先用 `refreshToken` 调用 `/Token/refresh` 换取新 `accessToken`，成功后自动重试原请求并更新 store；若刷新也失败（refreshToken 过期）再执行登出跳转。需处理并发请求同时触发 401 时的队列等待，避免多次刷新
+- [x] **Token 自动刷新机制**：`request.ts` 收到 401 时，先用 `refreshToken` 调用 `/Token/refresh` 换取新 `accessToken`，成功后自动重试原请求并更新 store；若刷新也失败（refreshToken 过期）再执行登出跳转。需处理并发请求同时触发 401 时的队列等待，避免多次刷新
 
 ### 业务功能
 - [ ] **消息通知**：Bell 图标当前 count 硬编码为 5，需接入真实通知数据
