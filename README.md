@@ -31,7 +31,7 @@
 - 📦 **丰富的页面模板** — 仪表盘、表单、列表、详情、结果、异常、账户设置等开箱即用
 - 🕐 **日期时间规范** — UTC ↔ 本地时区自动转换，dayjs 全插件集成
 
-> 框架设计、目录结构、路由规划、已完成功能及待办事项请参阅 [NexusStackPro-Architecture.md](./NexusStackPro-Architecture.md)。
+> 框架设计、目录结构、路由规划、已完成功能及待办事项请参阅 [NexusStackPro-Design.md](./NexusStackPro-Design.md)。
 
 ---
 

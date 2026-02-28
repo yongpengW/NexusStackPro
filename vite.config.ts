@@ -38,6 +38,22 @@ export default defineConfig(({ mode }) => {
       outDir: isProd ? 'dist' : `dist-${mode}`,
       // 非生产环境保留 sourcemap 便于调试
       sourcemap: !isProd,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // React 核心：极少变动，长期缓存
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            // Ant Design UI：体积最大，单独拆出
+            'vendor-antd': ['antd', '@ant-design/icons', '@ant-design/pro-components'],
+            // 服务端状态管理
+            'vendor-query': ['@tanstack/react-query', '@tanstack/react-query-devtools'],
+            // 国际化
+            'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+            // 工具库
+            'vendor-utils': ['dayjs', 'zustand'],
+          },
+        },
+      },
     },
   }
 })

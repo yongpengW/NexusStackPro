@@ -18,13 +18,13 @@ export type AvatarDropdownProps = {
 
 export const AvatarName: React.FC = () => {
   const userInfo = useAppStore((s) => s.userInfo)
-  return <span>{userInfo?.name ?? ''}</span>
+  return <span>{userInfo?.userName ?? ''}</span>
 }
 
 export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu, children }) => {
   const navigate = useNavigate()
   const userInfo = useAppStore((s) => s.userInfo)
-  const clearUserInfo = useAppStore((s) => s.clearUserInfo)
+  const clearUserInfo = useAppStore((s) => s.logout)
   const { t } = useTranslation()
 
   const actionStyle: React.CSSProperties = {

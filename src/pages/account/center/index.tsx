@@ -206,7 +206,7 @@ const AccountCenterPage: React.FC = () => {
   const userInfo = useAppStore((s) => s.userInfo)
 
   const avatar = userInfo?.avatar || 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
-  const name = userInfo?.name || '吴彦祖'
+  const name = userInfo?.userName || '吴彦祖'
 
   const renderContent = () => {
     if (tabKey === 'articles') return <ArticlesTab />
