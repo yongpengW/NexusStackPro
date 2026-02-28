@@ -11,7 +11,7 @@
 [![Vite](https://img.shields.io/badge/Vite-7.x-646CFF?logo=vite)](https://vitejs.dev/)
 [![Ant Design](https://img.shields.io/badge/Ant%20Design-5.29-0170FE?logo=antdesign)](https://ant.design/)
 [![许可证](https://img.shields.io/badge/许可证-MIT-green.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/yongpengW/NexusStack?style=social&label=NexusStack%20Stars)](https://github.com/yongpengW/NexusStack)
+[![GitHub Stars](https://img.shields.io/github/stars/yongpengW/NexusStackPro?style=social&label=NexusStackPro%20Stars)](https://github.com/yongpengW/NexusStackPro)
 
 </div>
 
