@@ -20,7 +20,7 @@
 ## ✨ 特性
 
 > NexusStackPro 是 NexusStack 全栈解决方案的前端部分。NexusStack 是一套生产级 .NET 10 微服务后台框架，集成了 API 网关、SignalR 实时通信、RabbitMQ 消息队列、Redis 缓存、EF Core 多数据库、AgileConfig 分布式配置、Serilog 结构化日志等企业级基础设施。NexusStackPro 与之对应，提供同样开箱即用的前端中台基座。
-> PS. 每次搭新项目都要重复造轮子太麻烦了，干脆做成模板。如果也能帮你节省时间，那就太好了！
+> Antd官方有一套Antd Pro的企业中台模板，但是官方的是基于UmiJS，整体使用太厚重了，也不利于中小型团队快速上手开发，所以我自己使用Antd和pro-components搭建了套，去掉了臃肿的UmiJS，实现了官方级别的中台系统框架
 
 - 🏗️ **完整的工程化基础设施** — 多环境构建、路径别名、ESLint、TypeScript 严格模式
 - 🔐 **认证与路由鉴权** — 登录状态持久化，`<AuthGuard>` 守卫路由，`useAccess` 权限控制
