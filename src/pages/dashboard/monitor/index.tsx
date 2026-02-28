@@ -10,7 +10,7 @@ import {
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-const { Countdown } = Statistic
+const { Timer } = Statistic
 const { Text } = Typography
 
 const deadline = Date.now() + 1000 * 60 * 60 * 24 * 2 + 1000 * 30
@@ -68,7 +68,7 @@ const MonitorPage: React.FC = () => {
             <Statistic title="销售目标完成率" value="92%" suffix={<RiseOutlined style={{ color: '#52c41a' }} />} />
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Countdown title="活动剩余时间" value={deadline} format="HH:mm:ss" prefix={<ClockCircleOutlined />} />
+            <Timer type="countdown" title="活动剩余时间" value={deadline} format="HH:mm:ss" prefix={<ClockCircleOutlined />} />
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Statistic title="每秒交易总额（元）" value={234} prefix={<ThunderboltOutlined style={{ color: '#faad14' }} />} />
