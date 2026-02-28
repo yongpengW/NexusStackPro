@@ -215,4 +215,68 @@ src/
 
 ---
 
+## Excel 处理工具类实现与最佳实践
+
+> 2026-03-01 已全量迁移为 exceljs，支持本地/UTC时间自动转换、富文本/公式单元格、类型安全校验，详见 src/utils/excel.tsx。
+
+### 设计原则
+- 采用 [exceljs](https://github.com/exceljs/exceljs) 作为唯一依赖，彻底移除 xlsx/xlsx-js-style（社区 fork）
+- 读写均为异步，支持大文件、原生样式、日期自动识别
+- 导入/导出均支持本地时间与 UTC 自动转换，避免时区错乱
+- 校验逻辑内聚，错误高亮直接返回 JSX，方便 antd Table 展示
+- 业务无关，所有格式化/校验均可配置
+
+### 主要接口
+- `readFile(fileInfo: ReadFileInfo): Promise<Record<string, unknown>[]>`
+  - 读取 antd Upload 文件，自动识别表头、日期、富文本、公式
+  - 仅支持 .xlsx 格式
+- `downloadFile(template: SheetTemplate): Promise<void>`
+  - 按二维数组写入 Excel，自动应用默认字体
+- `downloadDataSource(data, fileName, sheetName, withIndex, map): Promise<void>`
+  - 业务主入口，支持对象数组/二维数组/模板对象导出
+- `getImportData(dataSource, template): ImportedRow[]`
+  - 按模板校验导入数据，自动高亮错误单元格
+- `formatSheetData(dataSource, withIndex, map): unknown[][]`
+  - 通用数据格式化，支持多种输入类型
+
+### 关键实现片段
+```tsx
+// 读取 Excel（自动识别日期/富文本/公式单元格）
+export function readFile(fileInfo: ReadFileInfo): Promise<Record<string, unknown>[]> {
+  // ...existing code...
+}
+
+// 导出 Excel（异步，自动应用默认字体）
+export async function downloadFile(template: SheetTemplate): Promise<void> {
+  // ...existing code...
+}
+
+// 校验行数据，错误高亮
+function validateRow(item: ImportedRow, template: ExcelTemplate): ImportedRow {
+  // ...existing code...
+  if (field.type === DataType.number) {
+    // ...existing code...
+    if (isNaN(num)) {
+      item[displayKey] = <span className="text-orange-400">{String(item[key])}</span>
+      errors.push(`${field.title}${t('app.operation.upload.download.template.is.number')}`)
+    }
+    // ...existing code...
+  }
+  // ...existing code...
+}
+```
+
+### 迁移注意事项
+- 仅支持 .xlsx，不再兼容 .xls
+- `downloadFile`/`downloadDataSource` 需 `await` 调用
+- 非必填数字字段留空时返回 `''`，消费方如需默认 0 请自行处理
+- 校验错误高亮直接返回 JSX，Table 渲染无需额外处理
+- UTC 时间转换依赖 dayjs + utc 插件，已在 excel.tsx 内部注册
+
+---
+
+*如需详细代码请直接查阅 src/utils/excel.tsx，所有核心逻辑已在此文件实现。*
+
+---
+
 *最后更新：2026-03-01*

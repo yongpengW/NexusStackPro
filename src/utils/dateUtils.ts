@@ -86,3 +86,19 @@ export function toUtcRangePair(
   if (!range) return [null, null]
   return [toUtcISOString(range[0]), toUtcISOString(range[1])]
 }
+
+// ─── 通用格式化 ────────────────────────────────────────────────────────────────
+
+/**
+ * 格式化为货币展示（保留两位小数）
+ * @example formatCurrency(1234.5) → '1234.50'
+ * @example formatCurrency(null)   → '0.00'
+ */
+export function formatCurrency(value: number | string | null | undefined): string {
+  try {
+    const num = Number(value)
+    return isNaN(num) ? '0.00' : num.toFixed(2)
+  } catch {
+    return '0.00'
+  }
+}
