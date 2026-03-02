@@ -24,7 +24,7 @@ src/
 │   └── MainLayout.tsx          # 主布局：ProLayout mix 模式
 │
 ├── config/
-│   └── routes.tsx              # useMenuRoutes() Hook，ProLayout 菜单路由配置
+│   └── routes.tsx              # useMenuRoutes() Hook，ProLayout 菜单与路由（含系统管理）
 │
 ├── pages/
 │   ├── home/index.tsx          # 首页
@@ -59,23 +59,43 @@ src/
 │   │   ├── 404/index.tsx       # 404 页
 │   │   └── 500/index.tsx       # 500 服务异常页
 │   ├── analysis/index.tsx      # 数据分析（旧路径保留兼容）
-│   └── account/
-│       ├── center/index.tsx    # 个人中心
-│       └── settings/index.tsx  # 账户设置（4 Tab：基本/安全/通知/绑定）
+│   ├── account/
+│   │   ├── center/index.tsx    # 个人中心
+│   │   └── settings/index.tsx  # 账户设置（4 Tab：基本/安全/通知/绑定）
+│   └── system/
+│       ├── region/index.tsx    # 区域管理
+│       ├── role/index.tsx      # 角色管理
+│       ├── menu/index.tsx      # 菜单管理
+│       ├── user/index.tsx      # 用户管理
+│       └── permission/        # 权限管理（角色-菜单权限工作台）
+│           ├── index.tsx
+│           ├── RolePanel.tsx
+│           ├── PermissionTree.tsx
+│           └── usePermission.ts
 │
 ├── router/
-│   └── index.tsx               # 路由配置（嵌套结构）
+│   ├── index.tsx               # 路由配置（嵌套结构）
+│   └── AuthGuard.tsx           # 路由鉴权守卫（未登录跳转 /user/login）
 │
 ├── store/
 │   └── useAppStore.ts          # Zustand store（userInfo / token / refreshToken，含 localStorage 持久化）
 │
+├── hooks/
+│   └── useAccess.ts            # 权限 Hook（基于 /Token/permission，hasMenu / hasOperation）
+│
 ├── services/
-│   └── auth.ts                 # 认证相关 API（loginByPassword）
+│   ├── auth.ts                 # 认证（loginByPassword、refreshToken）
+│   ├── permission.ts          # 权限 API（getCurrentUserPermission、getRolePermission、saveRolePermission）
+│   ├── role.ts                 # 角色 API
+│   ├── menu.ts                 # 菜单 API
+│   ├── region.ts               # 区域 API
+│   └── user.ts                 # 用户 API
 │
 ├── utils/
 │   ├── request.ts              # 基础 HTTP 工具（fetch 封装，统一解包 RequestResultModel，全局错误处理）
 │   ├── globalApp.ts            # 组件外使用 antd message / notification 的代理工具
-│   └── dateUtils.ts            # 日期时间工具（UTC → 本地时区展示，本地 → UTC 提交）
+│   ├── dateUtils.ts            # 日期时间工具（UTC → 本地时区展示，本地 → UTC 提交）
+│   └── excel.tsx               # Excel 导入导出（exceljs，UTC/本地时间、富文本/公式、校验高亮）
 │
 ├── components/
 │   ├── index.ts                # 统一出口
@@ -126,9 +146,15 @@ src/
 │   ├── /exception/403        → 403 无权限
 │   ├── /exception/404        → 404 页
 │   └── /exception/500        → 500 服务异常
-└── /account               → redirect → /account/center
-    ├── /account/center       → 个人中心
-    └── /account/settings     → 账户设置
+├── /account               → redirect → /account/center
+│   ├── /account/center       → 个人中心
+│   └── /account/settings     → 账户设置
+└── /system                → redirect → /system/region
+    ├── /system/region        → 区域管理
+    ├── /system/role          → 角色管理
+    ├── /system/menu          → 菜单管理
+    ├── /system/user          → 用户管理
+    └── /system/permission    → 权限管理
 *                          → 404
 ```
 
@@ -144,6 +170,7 @@ src/
 - [x] HTTP 请求层封装（`src/utils/request.ts`，统一解包 `RequestResultModel`，全局处理 401/403/500/网络错误）
 - [x] globalApp 工具（`src/utils/globalApp.ts`，组件外调用 antd message / notification）
 - [x] 日期时间工具（`src/utils/dateUtils.ts`，UTC ↔ 本地时区，dayjs utc/timezone/relativeTime 插件）
+- [x] Excel 工具（`src/utils/excel.tsx`，exceljs 导入导出、UTC/本地时间、校验高亮，见文档「Excel 处理工具类」）
 - [x] React Query 接入（`@tanstack/react-query`，QueryClientProvider 挂载，登录页 useMutation 迁移，DevTools 仅开发环境）
 - [x] MainLayout 主布局（mix 模式、菱形背景图）
 - [x] 菜单路由配置抽离为 `useMenuRoutes()` Hook（`config/routes.tsx`）
@@ -163,15 +190,21 @@ src/
 - [x] 头像下拉菜单（登出 / 前往设置 / 未登录提示）
 - [x] 国际化（zh-CN + en-US，语言自动检测，antd locale 动态联动）
 - [x] Footer 组件（DefaultFooter 版权信息 + 链接）
+- [x] **路由鉴权守卫**：`router/AuthGuard.tsx`，未登录访问受保护路由跳转 `/user/login`，登录成功后支持 `location.state.from` 回跳
+- [x] **权限控制（useAccess Hook）**：`hooks/useAccess.ts` 基于 `GET /Token/permission` 返回 `hasMenu` / `hasOperation` / `hasAnyMenu` / `hasAllMenus`，供菜单、按钮、页面可见性控制
+- [x] **系统管理 - 区域管理**：`/system/region`，区域树增删改查、启用禁用、选择器（PRD：Region-Management.md）
+- [x] **系统管理 - 角色管理**：`/system/role`，角色 CRUD、平台筛选、权限配置 Drawer（PRD：Role-Management.md）
+- [x] **系统管理 - 菜单管理**：`/system/menu`，菜单树、API 资源绑定（PRD：Menu-Management.md）
+- [x] **系统管理 - 用户管理**：`/system/user`，用户 CRUD、角色与组织绑定、启用禁用与重置密码（PRD：User-Management.md）
+- [x] **系统管理 - 权限管理**：`/system/permission`，角色-菜单权限工作台、DataRange、半选提交、API 绑定只读展示（PRD：Permission-Management.md）
+- [x] **Token 自动刷新机制**：`request.ts` 收到 401 时用 `refreshToken` 换新 Token 并重试，失败再登出；并发 401 时队列等待，避免多次刷新
 
 ---
 
 ## 待完成 / 下一步工作
 
 ### 基础设施
-- [ ] **路由鉴权守卫**：在 `router/index.tsx` 封装 `<AuthGuard>` 组件，未登录时访问受保护路由自动跳转 `/user/login`；已登录时访问 `/user/login` 自动重定向首页
-- [ ] **权限控制（useAccess Hook）**：封装 `useAccess()` 根据 `userInfo` 返回权限对象（如 `{ isAdmin, canEdit }`），控制菜单、按钮、页面的可见性
-- [x] **Token 自动刷新机制**：`request.ts` 收到 401 时，先用 `refreshToken` 调用 `/Token/refresh` 换取新 `accessToken`，成功后自动重试原请求并更新 store；若刷新也失败（refreshToken 过期）再执行登出跳转。需处理并发请求同时触发 401 时的队列等待，避免多次刷新
+- [ ] **已登录访问登录页重定向**：已登录用户访问 `/user/login` 时自动重定向首页（可选增强）
 
 ### 业务功能
 - [ ] **消息通知**：Bell 图标当前 count 硬编码为 5，需接入真实通知数据
@@ -279,4 +312,4 @@ function validateRow(item: ImportedRow, template: ExcelTemplate): ImportedRow {
 
 ---
 
-*最后更新：2026-03-01*
+*最后更新：2026-03-02*

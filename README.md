@@ -28,10 +28,10 @@
 - 📡 **请求层统一封装** — 解包后端 `RequestResultModel`，全局处理 401 / 403 / 500 / 网络错误
 - 🗄️ **服务端状态管理** — React Query，与 Zustand 客户端状态严格分离
 - 🎨 **Pro 风格布局** — ProLayout mix 模式，菜单路由、Header 操作区、Avatar 下拉、Footer
-- 📦 **丰富的页面模板** — 仪表盘、表单、列表、详情、结果、异常、账户设置等开箱即用
+- 📦 **丰富的页面模板** — 仪表盘、表单、列表、详情、结果、异常、账户设置、系统管理（区域/角色/菜单/用户/权限）等开箱即用
 - 🕐 **日期时间规范** — UTC ↔ 本地时区自动转换，dayjs 全插件集成
 
-> 框架设计、目录结构、路由规划、已完成功能及待办事项请参阅 [NexusStackPro-Design.md](./NexusStackPro-Design.md)。
+> 框架设计、目录结构、路由规划、已完成功能及待办事项请参阅 [NexusStackPro-Design.md](./NexusStackPro-Design.md)。各业务模块 PRD（区域/角色/菜单/用户/权限管理等）见 [Docs/PRD](./Docs/PRD)。
 
 ---
 
@@ -238,4 +238,4 @@ toUtcISOString(dayjsValue)                   // "2026-02-28T06:24:13.000Z"
 
 ---
 
-*最后更新：2026-02-28*
+*最后更新：2026-03-02*

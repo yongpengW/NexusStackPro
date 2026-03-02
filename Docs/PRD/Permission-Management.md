@@ -5,7 +5,8 @@
 > 所属模块：系统管理 → 权限管理  
 > 对应后端控制器：`RoleController`（权限配置）、`MenuController`（API 绑定）、`TokenController`（当前用户权限）  
 > UI 规范：参见 [UI-Standards.md](./UI-Standards.md)  
-> 文档状态：**待开发**
+> 文档状态：**已完成**  
+> 最后更新：2026-03-02
 
 ---
 
@@ -169,20 +170,30 @@
 
 **接口**：`POST /api/Role/permission/{roleId}`
 
-**请求体**：
+**请求体**（与后端 `ChangeRolePermissionDto` 对齐）：
 ```json
 {
   "roleId": 5,
   "platformType": 2,
-  "menus": [1, 2, 3, 10, 11, 20]
+  "menus": [
+    { "menuId": 1,  "dataRange": 0 },
+    { "menuId": 2,  "dataRange": 0 },
+    { "menuId": 3,  "dataRange": 1 },
+    { "menuId": 10, "dataRange": 4 },
+    { "menuId": 11, "dataRange": 4 },
+    { "menuId": 20, "dataRange": 0 }
+  ]
 }
 ```
 
 **提交逻辑**：
-1. 收集所有 `checked` 状态的节点 menuId（包含 `indeterminate` 的目录/菜单节点，因为它们有部分子权限被选中）；
-2. 后端全量替换该角色在该平台下的 Permission 记录；
-3. 后端自动使持有该角色的所有用户的权限缓存失效（Redis `InvalidateAsync`）；
-4. 成功后右栏显示 `message.success('权限保存成功，已实时生效')`，刷新当前角色的权限树（重新请求以同步服务端状态）。
+1. 收集所有 `checked` 状态的节点 menuId（包含 `indeterminate` 的目录/菜单节点，因为它们有部分子权限被选中），得到去重集合 `allMenuIds = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))`；
+2. 对于每个 `menuId` 生成一条 `{ menuId, dataRange }`，其中：
+   - Menu / Operation 节点的 `dataRange` 取自当前 `dataRangeMap[menuId]`，若未设置则默认为 `DataRange.All(0)`；
+   - 半选父节点（仅在 `halfCheckedKeys` 中出现）的 `dataRange` 固定为 `DataRange.All(0)`；
+3. 后端按 `roleId + platformType` 维度**全量替换**该角色在该平台下的 `Permission` 记录（包括目录/菜单/操作节点），并自动补齐未在请求体中的上级节点记录；
+4. 后端自动使持有该角色的所有用户的权限缓存失效（Redis `InvalidateAsync`）；
+5. 成功后右栏显示 `message.success('权限保存成功，已实时生效')`，并重新请求权限树以同步服务端状态。
 
 **提交范围说明**：
 
@@ -190,11 +201,12 @@
 > `halfCheckedKeys`（半选节点）**必须合并进最终提交的 `menus` 数组**。  
 > 半选状态表示该目录/菜单节点下有部分子权限被授权，其本身也属于"有此菜单权限"的语义范畴。  
 > 后端按 menuId 存记录，不区分"全选"与"半选"，只要记录存在即视为有该菜单权限。  
-> **前端实现**：`menus = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))`  
+> **前端实现**：`const allMenuIds = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))`  
+> 并为每个 `menuId` 生成 `{ menuId, dataRange }`；  
 > **不得**只传 `checkedKeys` 而丢弃 `halfCheckedKeys`，否则父级目录权限丢失，前端侧边栏将无法渲染对应目录节点。
 
-- `indeterminate`（半选）状态的目录/菜单节点**必须包含**在提交的 menuIds 中（见上方说明）；
-- Operation 节点独立计入 menuIds，不依附父 Menu 节点的选中状态；
+- `indeterminate`（半选）状态的目录/菜单节点**必须包含**在提交的 `menus` 数组中（见上方说明）；
+- Operation 节点独立计入 `menus`，不依附父 Menu 节点的选中状态；
 - 若 `menus` 数组为空，代表清空该角色在该平台的所有权限（服务端支持此操作）。
 
 ---
@@ -249,18 +261,37 @@ interface PermissionDto {
 ### 5.2 保存权限请求体（ChangeRolePermissionDto）
 
 ```typescript
+enum DataRange {
+  All                    = 0, // 全部数据
+  CurrentAndSubLevels    = 1, // 本级及下级
+  CurrentLevel           = 2, // 本级
+  CurrentAndParentLevels = 3, // 本级及上级
+  Self                   = 4, // 仅本人
+}
+
+interface MenuPermissionItem {
+  menuId: number
+  dataRange: DataRange
+}
+
 interface ChangeRolePermissionDto {
   roleId: number;
   platformType?: PlatformType;
   /**
-   * 选中的所有 menuId，必须同时包含：
-   *   1. checkedKeys   —— Tree 完全勾选的节点
-   *   2. halfCheckedKeys —— Tree 半选（indeterminate）的父节点
+   * 选中的所有菜单权限项，必须同时包含：
+   *   1. checkedKeys       —— Tree 完全勾选的节点
+   *   2. halfCheckedKeys   —— Tree 半选（indeterminate）的父节点
    * 半选节点表示"该目录/菜单下有部分子权限被授权"，后端同样需要为其创建 Permission 记录。
    * 若只传 checkedKeys 丢弃 halfCheckedKeys，前端侧边栏将因缺少父目录权限记录而无法渲染目录节点。
-   * 前端实现：Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+   * 前端实现：
+   *   const allMenuIds = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+   *   menus = allMenuIds.map(menuId => ({
+   *     menuId,
+   *     // halfChecked 父节点不在 dataRangeMap 中，固定为 All
+   *     dataRange: dataRangeMap[menuId] ?? DataRange.All,
+   *   }))
    */
-  menus: number[];
+  menus: MenuPermissionItem[];
 }
 ```
 
@@ -422,4 +453,4 @@ export const PermissionApi = {
 
 ---
 
-*文档维护：请在功能完成后将状态修改为"已完成"并更新 `最后更新` 日期。*
+*文档维护：后续有变更时请更新 `最后更新` 日期。*

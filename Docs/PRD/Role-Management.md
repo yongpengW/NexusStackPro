@@ -5,7 +5,8 @@
 > 所属模块：系统管理 → 角色管理  
 > 对应后端控制器：`RoleController`  
 > UI 规范：参见 [UI-Standards.md](./UI-Standards.md)  
-> 文档状态：**待开发**
+> 文档状态：**已完成**  
+> 最后更新：2026-03-02
 
 ---
 
@@ -247,12 +248,20 @@ interface CreateRoleDto {
 }
 ```
 
-### 5.3 权限配置数据（PermissionDto）
+### 5.3 权限配置数据（PermissionDto / ChangeRolePermissionDto）
 
-> 由 `GET /api/Role/permission` 返回，包含**全量**菜单树节点，每个节点通过 `hasPermission` 标记当前角色是否持有该权限。  
-> 对应后端：`NexusStack.Core.Dtos.Permissions.PermissionDto`
+> 由 `GET /api/Role/permission` 返回，包含**全量**菜单树节点，每个节点通过 `hasPermission` 标记当前角色是否持有该权限，同时附带 `dataRange`。  
+> 对应后端：`NexusStack.Core.Dtos.Permissions.PermissionDto` / `ChangeRolePermissionDto`
 
 ```typescript
+enum DataRange {
+  All                    = 0, // 全部数据
+  CurrentAndSubLevels    = 1, // 本级及下级
+  CurrentLevel           = 2, // 本级
+  CurrentAndParentLevels = 3, // 本级及上级
+  Self                   = 4, // 仅本人
+}
+
 interface PermissionDto {
   id: number;               // 主键（来自 DtoBase）
   roleId: number;           // 权限所属角色 Id
@@ -262,15 +271,33 @@ interface PermissionDto {
   menuUrl: string;          // 菜单路由（Menu 类型有值）
   menuType: MenuType;       // 1=子系统 2=目录 3=菜单 4=操作
   menuOrder: number;        // 菜单排序
-  hasPermission: boolean;   // 当前角色是否已拥有此权限
+  hasPermission: boolean;   // 当前角色是否已拥有此权限（根据 Permission 记录是否存在计算得出）
+  dataRange: DataRange;     // 数据范围，Directory / Subsystem 固定为 All
   children?: PermissionDto[];    // 子目录/子菜单（树节点递归）
   operations?: PermissionDto[];  // 按钮级操作权限（内联展示，不参与树展开）
+}
+
+interface MenuPermissionItem {
+  menuId: number;
+  dataRange: DataRange;
 }
 
 interface ChangeRolePermissionDto {
   roleId: number;
   platformType?: PlatformType;  // 可选，对应后端 PlatformType?
-  menus: number[];              // 选中的菜单 Id 数组（对应后端 ChangeRolePermissionDto.Menus）
+  /**
+   * 选中的所有菜单权限项，必须同时包含：
+   *   1. checkedKeys       —— Tree 完全勾选的节点
+   *   2. halfCheckedKeys   —— Tree 半选（indeterminate）的父节点
+   * 半选节点表示"该目录/菜单下有部分子权限被授权"，后端同样需要为其创建 Permission 记录。
+   * 前端实现：
+   *   const allMenuIds = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+   *   menus = allMenuIds.map(menuId => ({
+   *     menuId,
+   *     dataRange: dataRangeMap[menuId] ?? DataRange.All,
+   *   }))
+   */
+  menus: MenuPermissionItem[];   // 选中的菜单权限集合（对应后端 ChangeRolePermissionDto.Menus）
 }
 ```
 
@@ -294,8 +321,8 @@ interface ChangeRolePermissionDto {
 
 ### 6.3 保存逻辑
 
-- 收集所有选中的 `menuId`（含半选的目录/分组节点），组装为 `{ roleId, platformType, menus }` 提交；
-- 后端全量替换该角色在该平台下的权限；
+- 收集所有选中的 `menuId`（含半选的目录/分组节点），组装为 `{ roleId, platformType, menus: MenuPermissionItem[] }` 提交，其中 `menus` 按照第 5.3 节的规则填充 `dataRange`；
+- 后端按 `roleId + platformType` 维度全量替换该角色在该平台下的权限，并自动补齐未在请求体中的上级节点记录；
 - 保存成功后后端自动使受影响用户缓存失效，前端关闭 Drawer 并显示 `message.success('权限配置保存成功')`。
 
 ---
@@ -414,4 +441,4 @@ export const RoleApi = {
 
 ---
 
-*文档维护：请在功能完成后将状态修改为"已完成"并更新 `最后更新` 日期。*
+*文档维护：后续有变更时请更新 `最后更新` 日期。*
