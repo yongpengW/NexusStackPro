@@ -41,6 +41,10 @@ import Exception500Page from '@/pages/exception/500'
 // Account
 import AccountCenterPage from '@/pages/account/center'
 
+// System
+import RegionPage from '@/pages/system/region'
+import RolePage   from '@/pages/system/role'
+
 export const router = createBrowserRouter([
   {
     path: '/user',
@@ -132,6 +136,16 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/account/center" replace /> },
           { path: 'center', element: <AccountCenterPage /> },
           { path: 'settings', element: <AccountSettingsPage /> },
+        ],
+      },
+
+      // System
+      {
+        path: 'system',
+        children: [
+          { index: true, element: <Navigate to="/system/region" replace /> },
+          { path: 'region', element: <RegionPage /> },
+          { path: 'role',   element: <RolePage /> },
         ],
       },
     ],

@@ -19,6 +19,9 @@ import {
   StepForwardOutlined,
   ControlOutlined,
   SettingOutlined,
+  ClusterOutlined,
+  ApartmentOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 
@@ -97,6 +100,15 @@ export const useMenuRoutes = () => {
         routes: [
           { path: '/account/center', name: t('menu.account.center'), icon: <UserOutlined /> },
           { path: '/account/settings', name: t('menu.account.settings'), icon: <SettingOutlined /> },
+        ],
+      },
+      {
+        path: '/system',
+        name: t('menu.system'),
+        icon: <ClusterOutlined />,
+        routes: [
+          { path: '/system/region', name: t('menu.system.region'), icon: <ApartmentOutlined /> },
+          { path: '/system/role',   name: t('menu.system.role'),   icon: <TeamOutlined /> },
         ],
       },
     ],

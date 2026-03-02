@@ -1,4 +1,4 @@
-﻿import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { ProLayout } from '@ant-design/pro-components'
 import { BellOutlined, SettingOutlined } from '@ant-design/icons'
 import { Badge } from 'antd'
@@ -23,9 +23,16 @@ const MainLayout: React.FC = () => {
       fixSiderbar
       menu={{ locale: false }}
       onMenuHeaderClick={() => navigate('/')}
-      menuItemRender={(item, dom) =>
-        item.path ? <Link to={item.path}>{dom}</Link> : dom
-      }
+      menuItemRender={(item, dom) => {
+        if (!item.path) return dom
+        // mix 布局侧边栏默认不渲染子菜单图标，手动补齐
+        return (
+          <Link to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {item.icon && <span className="anticon">{item.icon}</span>}
+            <span>{item.name}</span>
+          </Link>
+        )
+      }}
       avatarProps={{
         src: userInfo?.avatar,
         title: <AvatarName />,

@@ -279,3 +279,76 @@ export const http = {
     request<T>(path, { method: 'DELETE', ...options }),
 }
 
+/**
+ * 分页接口专用：返回 { items, total } 而非仅 data 字段。
+ * 后端分页响应格式：{ success, code, data: T[], total, page, totalPage, limit, timestamp }
+ */
+export async function fetchPagedData<T>(
+  path: string,
+): Promise<{ items: T[]; total: number }> {
+  const url = `${BASE_URL}${path}`
+
+  const makeRequest = async (token?: string): Promise<Response> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    }
+    return fetch(url, { method: 'GET', headers })
+  }
+
+  let response: Response
+  try {
+    response = await makeRequest()
+  } catch {
+    globalNotification.error({ message: '网络连接失败', description: '无法连接到服务器', duration: 4 })
+    throw new ApiError(0, '网络连接失败')
+  }
+
+  let body: RequestPagedResultModel<T>
+  try {
+    body = await response.json()
+  } catch {
+    throw new ApiError(response.status, `无法解析响应内容 (HTTP ${response.status})`)
+  }
+
+  // 401 → 尝试刷新 token
+  const is401 = response.status === 401 || (body && !body.success && body.code === 401)
+  if (is401) {
+    try {
+      const newToken = await tryRefreshToken()
+      const retryResponse = await makeRequest(newToken)
+      body = await retryResponse.json()
+    } catch (err) {
+      if (err instanceof ApiError) throw err
+      throw new ApiError(0, '网络连接失败')
+    }
+  }
+
+  if (!body.success || body.code !== 200) {
+    handleGlobalError(body.code, body.message)
+    throw new ApiError(body.code, body.message)
+  }
+
+  return { items: body.data, total: (body as RequestPagedResultModel<T>).total ?? 0 }
+}
+
+/**
+ * 将对象拼接为 URL 查询字符串，自动过滤 undefined / null / '' 值
+ *
+ * @example
+ *   buildUrl('/Region/list', { keyword: 'admin', level: 1 })
+ *   // → '/Region/list?keyword=admin&level=1'
+ */
+export function buildUrl(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined | null>,
+): string {
+  if (!params) return path
+  const qs = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join('&')
+  return qs ? `${path}?${qs}` : path
+}
+

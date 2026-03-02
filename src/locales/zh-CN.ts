@@ -38,6 +38,10 @@ const zhCN = {
   'menu.account': '账户',
   'menu.account.center': '个人中心',
   'menu.account.settings': '账户设置',
+  // system
+  'menu.system':        '系统管理',
+  'menu.system.region': '区域管理',
+  'menu.system.role':   '角色管理',
 
   // 登录页
   'pages.login.title': 'NexusStack',

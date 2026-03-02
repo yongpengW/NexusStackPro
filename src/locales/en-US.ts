@@ -34,6 +34,10 @@ const enUS = {
   'menu.exception.403': '403',
   'menu.exception.404': '404',
   'menu.exception.500': '500',
+  // system
+  'menu.system':        'System',
+  'menu.system.region': 'Region',
+  'menu.system.role':   'Role',
   // account
   'menu.account': 'Account',
   'menu.account.center': 'Account Center',
