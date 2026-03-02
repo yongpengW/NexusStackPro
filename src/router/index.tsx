@@ -44,6 +44,8 @@ import AccountCenterPage from '@/pages/account/center'
 // System
 import RegionPage from '@/pages/system/region'
 import RolePage   from '@/pages/system/role'
+import MenuPage   from '@/pages/system/menu'
+import UserPage   from '@/pages/system/user'
 
 export const router = createBrowserRouter([
   {
@@ -146,6 +148,8 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/system/region" replace /> },
           { path: 'region', element: <RegionPage /> },
           { path: 'role',   element: <RolePage /> },
+          { path: 'menu',   element: <MenuPage /> },
+          { path: 'user',   element: <UserPage /> },
         ],
       },
     ],

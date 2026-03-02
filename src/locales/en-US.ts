@@ -38,6 +38,8 @@ const enUS = {
   'menu.system':        'System',
   'menu.system.region': 'Region',
   'menu.system.role':   'Role',
+  'menu.system.menu':   'Menu',
+  'menu.system.user':   'User',
   // account
   'menu.account': 'Account',
   'menu.account.center': 'Account Center',

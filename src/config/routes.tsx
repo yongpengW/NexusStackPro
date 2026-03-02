@@ -109,6 +109,8 @@ export const useMenuRoutes = () => {
         routes: [
           { path: '/system/region', name: t('menu.system.region'), icon: <ApartmentOutlined /> },
           { path: '/system/role',   name: t('menu.system.role'),   icon: <TeamOutlined /> },
+          { path: '/system/menu',   name: t('menu.system.menu'),   icon: <TeamOutlined /> },
+          { path: '/system/user',   name: t('menu.system.user'),   icon: <TeamOutlined /> },
         ],
       },
     ],
