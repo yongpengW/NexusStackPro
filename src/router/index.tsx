@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import MainLayout from '@/layouts/MainLayout'
+import { AuthGuard } from './AuthGuard'
 import HomePage from '@/pages/home'
 import LoginPage from '@/pages/login'
 import NotFoundPage from '@/pages/not-found'
@@ -46,6 +47,7 @@ import RegionPage from '@/pages/system/region'
 import RolePage   from '@/pages/system/role'
 import MenuPage   from '@/pages/system/menu'
 import UserPage   from '@/pages/system/user'
+import PermissionPage from '@/pages/system/permission'
 
 export const router = createBrowserRouter([
   {
@@ -56,7 +58,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <MainLayout />,
+    element: <AuthGuard><MainLayout /></AuthGuard>,
     children: [
       { index: true, element: <Navigate to="/dashboard/analysis" replace /> },
       { path: 'home', element: <HomePage /> },
@@ -150,6 +152,7 @@ export const router = createBrowserRouter([
           { path: 'role',   element: <RolePage /> },
           { path: 'menu',   element: <MenuPage /> },
           { path: 'user',   element: <UserPage /> },
+          { path: 'permission', element: <PermissionPage /> },
         ],
       },
     ],

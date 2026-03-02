@@ -185,7 +185,15 @@
 4. 成功后右栏显示 `message.success('权限保存成功，已实时生效')`，刷新当前角色的权限树（重新请求以同步服务端状态）。
 
 **提交范围说明**：
-- `indeterminate`（半选）状态的节点**应包含**在提交的 menuIds 中，因为服务端只关心"是否有此菜单权限记录"；
+
+> ⚠️ **重要设计决策（已确认，禁止修改）**  
+> `halfCheckedKeys`（半选节点）**必须合并进最终提交的 `menus` 数组**。  
+> 半选状态表示该目录/菜单节点下有部分子权限被授权，其本身也属于"有此菜单权限"的语义范畴。  
+> 后端按 menuId 存记录，不区分"全选"与"半选"，只要记录存在即视为有该菜单权限。  
+> **前端实现**：`menus = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))`  
+> **不得**只传 `checkedKeys` 而丢弃 `halfCheckedKeys`，否则父级目录权限丢失，前端侧边栏将无法渲染对应目录节点。
+
+- `indeterminate`（半选）状态的目录/菜单节点**必须包含**在提交的 menuIds 中（见上方说明）；
 - Operation 节点独立计入 menuIds，不依附父 Menu 节点的选中状态；
 - 若 `menus` 数组为空，代表清空该角色在该平台的所有权限（服务端支持此操作）。
 
@@ -219,11 +227,24 @@ interface PermissionDto {
   menuUrl: string;
   menuType: MenuType;       // 1=Subsystem 2=Directory 3=Menu 4=Operation
   menuOrder: number;
-  hasPermission: boolean;   // 当前角色是否持有该权限
+  /**
+   * 当前角色是否持有该权限。
+   * ⚠️ 重要说明（禁止删除此字段）：
+   * 后端数据库 Permission 表不存储此布尔字段（有记录即有权限），
+   * 但 API 响应中此字段是计算属性（= Permission 记录是否存在），
+   * 前端权限树依赖此值初始化 checkedKeys，缺失将导致已有权限无法回显。
+   */
+  hasPermission: boolean;
   children?: PermissionDto[];   // 子目录/子菜单（树节点递归）
   operations?: PermissionDto[]; // 按钮级权限（内联展示，不参与树展开）
 }
 ```
+
+> ✅ **DataRange（数据范围）V1 已实现**：  
+> - `PermissionDto` 含 `dataRange: DataRange` 字段（`All=0 / CurrentAndSubLevels=1 / CurrentLevel=2 / CurrentAndParentLevels=3 / Self=4`）；  
+> - 权限配置页对 **Menu / Operation** 节点在勾选时显示"数据范围"下拉选择器；  
+> - **Directory / Subsystem** 节点不展示，保存时固定 `All(0)`（此类节点不涉及数据过滤语义）；  
+> - 角色管理 PermissionDrawer（快捷入口）不展示 DataRange UI，但提交时携带已还原的数据范围值，不覆盖权限管理页的精细配置。
 
 ### 5.2 保存权限请求体（ChangeRolePermissionDto）
 
@@ -231,7 +252,15 @@ interface PermissionDto {
 interface ChangeRolePermissionDto {
   roleId: number;
   platformType?: PlatformType;
-  menus: number[];   // 选中的所有 menuId（含半选节点）
+  /**
+   * 选中的所有 menuId，必须同时包含：
+   *   1. checkedKeys   —— Tree 完全勾选的节点
+   *   2. halfCheckedKeys —— Tree 半选（indeterminate）的父节点
+   * 半选节点表示"该目录/菜单下有部分子权限被授权"，后端同样需要为其创建 Permission 记录。
+   * 若只传 checkedKeys 丢弃 halfCheckedKeys，前端侧边栏将因缺少父目录权限记录而无法渲染目录节点。
+   * 前端实现：Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+   */
+  menus: number[];
 }
 ```
 
@@ -267,7 +296,7 @@ interface PermissionPageState {
   // 右栏
   permissionTree: PermissionDto[];   // 原始权限树（从后端加载）
   checkedKeys: number[];             // 当前勾选的 menuId 集合
-  halfCheckedKeys: number[];         // 半选 menuId 集合（提交时需合并进 checkedKeys）
+  halfCheckedKeys: number[];         // 半选 menuId 集合（提交时必须合并进 checkedKeys，见 §3.5）
   isDirty: boolean;                  // 是否有未保存的修改
 
   // 展开的 API 绑定（惰性加载）

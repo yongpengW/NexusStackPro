@@ -1,4 +1,4 @@
-﻿import {
+import {
   LockOutlined,
   MobileOutlined,
   UserOutlined,
@@ -11,7 +11,7 @@ import {
 } from '@ant-design/pro-components'
 import { Alert, App, Tabs } from 'antd'
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, type Location } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import Footer from '@/components/Footer'
@@ -31,6 +31,7 @@ const LoginPage: React.FC = () => {
   const [loginType, setLoginType] = useState<LoginType>('account')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
   const setLoginData = useAppStore((s) => s.setLoginData)
 
@@ -39,7 +40,9 @@ const LoginPage: React.FC = () => {
     onSuccess: (result) => {
       setLoginData(result)
       message.success(t('pages.login.success'))
-      navigate('/')
+      // 登录前被守卫拦截时，location.state.from 记录原路径，登录成功后回跳
+      const from = (location.state as { from?: Location })?.from
+      navigate(from ? `${from.pathname}${from.search ?? ''}` : '/', { replace: true })
     },
     onError: (err) => {
       // 401：账号或密码错误（request.ts 已判断在 /user/login 页跳过跳转，此处显示行内提示）

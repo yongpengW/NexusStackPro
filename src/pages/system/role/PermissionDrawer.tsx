@@ -18,6 +18,7 @@ import {
   PLATFORM_META,
   parsePlatformFlags,
   PlatformType,
+  DataRange,
 } from '@/services/role'
 import { ROLE_QUERY_KEYS } from './useRole'
 import type { PermissionDto, RoleDto } from '@/services/role'
@@ -79,6 +80,20 @@ function collectCheckedIds(list: PermissionDto[]): number[] {
   return ids
 }
 
+/** 收集已有权限节点的 dataRange 映射（保存时携带，避免 Drawer 操作丢失已配置的数据范围） */
+function collectDataRangeMap(list: PermissionDto[]): Record<number, DataRange> {
+  const map: Record<number, DataRange> = {}
+  const walk = (items: PermissionDto[]) => {
+    for (const p of items) {
+      if (p.hasPermission) map[p.menuId] = p.dataRange ?? DataRange.All
+      if (p.children)   walk(p.children)
+      if (p.operations) walk(p.operations)
+    }
+  }
+  walk(list)
+  return map
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function PermissionDrawer({ open, role, onClose }: PermissionDrawerProps) {
@@ -115,6 +130,11 @@ export function PermissionDrawer({ open, role, onClose }: PermissionDrawerProps)
   const [halfCheckedKeys, setHalfCheckedKeys] = useState<React.Key[]>([])
   const [isDirty,         setIsDirty]         = useState(false)
   const [expandedKeys,    setExpandedKeys]    = useState<React.Key[]>([])
+  /**
+   * DataRange 映射（隐藏于 Drawer UI，仅用于保存时携带）。
+   * 初始化时从服务端数据还原，新增节点默认 All，确保 Drawer 不会覆盖已在权限管理页配置的数据范围。
+   */
+  const [dataRangeMap, setDataRangeMap] = useState<Record<number, DataRange>>({})
 
   // 数据加载完成后初始化 checkedKeys 和展开状态
   const permDataRef = useRef<PermissionDto[] | undefined>(undefined)
@@ -124,6 +144,7 @@ export function PermissionDrawer({ open, role, onClose }: PermissionDrawerProps)
       const ids = collectCheckedIds(permQuery.data)
       setCheckedKeys(ids)
       setHalfCheckedKeys([])
+      setDataRangeMap(collectDataRangeMap(permQuery.data))
       setIsDirty(false)
       // 默认展开第一层
       setExpandedKeys(treeNodes.map((n) => n.key))
@@ -138,6 +159,15 @@ export function PermissionDrawer({ open, role, onClose }: PermissionDrawerProps)
     const checkedArr = Array.isArray(checked) ? checked : checked.checked
     setCheckedKeys(checkedArr)
     setHalfCheckedKeys(info.halfCheckedKeys ?? [])
+    // 同步 dataRangeMap：保留已有值，新增节点默认 All
+    setDataRangeMap((prev) => {
+      const next: Record<number, DataRange> = {}
+      for (const key of checkedArr) {
+        const id = key as number
+        next[id] = prev[id] ?? DataRange.All
+      }
+      return next
+    })
     setIsDirty(true)
   }
 
@@ -165,12 +195,20 @@ export function PermissionDrawer({ open, role, onClose }: PermissionDrawerProps)
 
   // ─── 保存权限 ─────────────────────────────────────────────────────────
   const saveMutation = useMutation({
-    mutationFn: () =>
-      RoleApi.savePermission(role!.id, {
+    mutationFn: () => {
+      const allMenuIds = Array.from(
+        new Set([...(checkedKeys as number[]), ...(halfCheckedKeys as number[])]),
+      )
+      return RoleApi.savePermission(role!.id, {
         roleId:       role!.id,
         platformType: activePlatform,
-        menus: checkedKeys as number[],
-      }),
+        // halfChecked 父节点不在 dataRangeMap 中，回退 All（见 PRD §3.5）
+        menus: allMenuIds.map((menuId) => ({
+          menuId,
+          dataRange: dataRangeMap[menuId] ?? DataRange.All,
+        })),
+      })
+    },
     onSuccess: () => {
       message.success('权限配置保存成功')
       setIsDirty(false)

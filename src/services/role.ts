@@ -44,6 +44,29 @@ export enum MenuType {
   Operation = 4,
 }
 
+/** 数据范围：枚举值越小范围越宽，多角色合并时取最小值（最宽松） */
+export enum DataRange {
+  All                    = 0, // 全部数据
+  CurrentAndSubLevels    = 1, // 本级及下级
+  CurrentLevel           = 2, // 本级
+  CurrentAndParentLevels = 3, // 本级及上级
+  Self                   = 4, // 仅本人
+}
+
+export const DATA_RANGE_OPTIONS: { value: DataRange; label: string }[] = [
+  { value: DataRange.All,                    label: '全部' },
+  { value: DataRange.CurrentAndSubLevels,    label: '本级及下级' },
+  { value: DataRange.CurrentLevel,           label: '本级' },
+  { value: DataRange.CurrentAndParentLevels, label: '本级及上级' },
+  { value: DataRange.Self,                   label: '仅本人' },
+]
+
+/** 单条菜单权限提交项 */
+export interface MenuPermissionItem {
+  menuId:    number
+  dataRange: DataRange
+}
+
 // ─── DTO ─────────────────────────────────────────────────────────────────────
 
 export interface RoleDto {
@@ -76,7 +99,13 @@ export interface PermissionDto {
   menuUrl: string
   menuType: MenuType
   menuOrder: number
+  /**
+   * 当前角色是否持有该权限（后端计算字段，Permission 记录存在即为 true）。
+   * 禁止从 DTO 中移除，前端权限树回显依赖此值。
+   */
   hasPermission: boolean
+  /** 数据范围，仅 Menu / Operation 节点有实际意义；Directory / Subsystem 固定为 All */
+  dataRange: DataRange
   children?: PermissionDto[]
   operations?: PermissionDto[]
 }
@@ -84,7 +113,8 @@ export interface PermissionDto {
 export interface ChangeRolePermissionDto {
   roleId: number
   platformType?: number
-  menus: number[]
+  /** 每条菜单权限均需携带 dataRange；halfChecked 父节点统一使用 DataRange.All */
+  menus: MenuPermissionItem[]
 }
 
 export interface SelectOptionDto {

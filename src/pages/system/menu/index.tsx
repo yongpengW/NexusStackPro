@@ -52,10 +52,6 @@ function collectAllKeys(nodes: MenuTreeDto[]): number[] {
 
 export default function MenuPage() {
   const [platformType, setPlatformType] = useState<number>(PlatformType.All)
-  const platformTypeRef = useRef(platformType)
-  useEffect(() => {
-    platformTypeRef.current = platformType
-  }, [platformType])
 
   const { dataSource, isLoading, operatingId, refresh, handleDelete } = useMenu(platformType)
 
