@@ -54,19 +54,6 @@ function toTreeData(nodes: RegionTreeDto[]): RegionTreeNode[] {
   }))
 }
 
-// ─── 根据 id 在树中查找节点 ────────────────────────────────────────────────────
-
-function findRegionNode(nodes: RegionTreeDto[], id: number): RegionTreeDto | null {
-  for (const n of nodes) {
-    if (n.id === id) return n
-    if (n.children?.length) {
-      const child = findRegionNode(n.children, id)
-      if (child) return child
-    }
-  }
-  return null
-}
-
 // ─── 拍平整棵树并按 id 去重 ────────────────────────────────────────────────────
 
 function flattenRegionsUnique(nodes: RegionTreeDto[]): RegionDto[] {
@@ -108,7 +95,6 @@ export default function RegionPage() {
     keyword,
     setKeyword,
     isLoading,
-    dataSource,
     treeData,
     operatingId,
     refresh,
@@ -415,7 +401,7 @@ export default function RegionPage() {
               titleRender={(node) => {
                 const regionNode = node as RegionTreeNode
                 const region = regionNode.nodeData
-                if (!region) return <span>{node.title}</span>
+                if (!region) return <span>{node.title as string}</span>
 
                 const hasChildren = !!region.children?.length
                 const menuItems: MenuProps['items'] = [

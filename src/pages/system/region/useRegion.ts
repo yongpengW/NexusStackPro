@@ -26,7 +26,6 @@ export function useRegion() {
   })
   const treeData = (treeQuery.data ?? []) as RegionTreeDto[]
   const isLoading = treeQuery.isLoading
-  const dataSource: (RegionTreeDto | RegionDto)[] = treeData
 
   // ─── 刷新 ────────────────────────────────────────────────────────────────
   const refresh = useCallback(() => {
@@ -114,7 +113,6 @@ export function useRegion() {
     keyword,
     setKeyword,
     isLoading,
-    dataSource,
     treeData,
     operatingId,
     refresh,
