@@ -22,6 +22,8 @@ import {
   ClusterOutlined,
   ApartmentOutlined,
   TeamOutlined,
+  AppstoreAddOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 
@@ -105,12 +107,20 @@ export const useMenuRoutes = () => {
       {
         path: '/system',
         name: t('menu.system'),
-        icon: <ClusterOutlined />,
+        icon: <SettingOutlined />,
         routes: [
+          // 区域：地图/楼宇风格
           { path: '/system/region', name: t('menu.system.region'), icon: <ApartmentOutlined /> },
+          // 组织架构：集群图标
+          { path: '/system/org',    name: t('menu.system.org'),    icon: <ClusterOutlined /> },
+          // 角色：多人/团队
           { path: '/system/role',   name: t('menu.system.role'),   icon: <TeamOutlined /> },
-          { path: '/system/menu',   name: t('menu.system.menu'),   icon: <TeamOutlined /> },
-          { path: '/system/user',   name: t('menu.system.user'),   icon: <TeamOutlined /> },
+          // 菜单：应用/菜单图标
+          { path: '/system/menu',   name: t('menu.system.menu'),   icon: <AppstoreAddOutlined /> },
+          // 用户：头像图标
+          { path: '/system/user',   name: t('menu.system.user'),   icon: <UserOutlined /> },
+          // 权限：安全证书图标
+          { path: '/system/permission', name: t('menu.system.permission'), icon: <SafetyCertificateOutlined /> },
         ],
       },
     ],

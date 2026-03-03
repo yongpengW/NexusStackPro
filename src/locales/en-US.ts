@@ -37,9 +37,11 @@ const enUS = {
   // system
   'menu.system':        'System',
   'menu.system.region': 'Region',
+  'menu.system.org':    'Org Chart',
   'menu.system.role':   'Role',
   'menu.system.menu':   'Menu',
   'menu.system.user':   'User',
+  'menu.system.permission': 'Permission',
   // account
   'menu.account': 'Account',
   'menu.account.center': 'Account Center',

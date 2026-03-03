@@ -48,6 +48,7 @@ import RolePage   from '@/pages/system/role'
 import MenuPage   from '@/pages/system/menu'
 import UserPage   from '@/pages/system/user'
 import PermissionPage from '@/pages/system/permission'
+import OrgPage from '@/pages/system/org'
 
 export const router = createBrowserRouter([
   {
@@ -153,6 +154,7 @@ export const router = createBrowserRouter([
           { path: 'menu',   element: <MenuPage /> },
           { path: 'user',   element: <UserPage /> },
           { path: 'permission', element: <PermissionPage /> },
+          { path: 'org', element: <OrgPage /> },
         ],
       },
     ],
