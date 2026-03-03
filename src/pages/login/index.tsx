@@ -22,9 +22,27 @@ import './index.css'
 
 type LoginType = 'account' | 'mobile'
 
+const encodePasswordToBase64 = (password: string) => {
+  if (!password) return ''
+  const utf8Bytes = new TextEncoder().encode(password)
+  let binary = ''
+  utf8Bytes.forEach((b) => {
+    binary += String.fromCharCode(b)
+  })
+  return btoa(binary)
+}
+
 const LoginMessage: React.FC<{ content: string }> = ({ content }) => (
   <Alert style={{ marginBottom: 24 }} message={content} type="error" showIcon />
 )
+
+type LoginFormValues = {
+  username: string
+  password: string
+  autoLogin?: boolean
+  mobile?: string
+  captcha?: string
+}
 
 const LoginPage: React.FC = () => {
   const [loginError, setLoginError] = useState<string>('')
@@ -34,6 +52,7 @@ const LoginPage: React.FC = () => {
   const location = useLocation()
   const { t } = useTranslation()
   const setLoginData = useAppStore((s) => s.setLoginData)
+  const setRememberMe = useAppStore((s) => s.setRememberMe)
 
   const { mutate: submitLogin, isPending } = useMutation({
     mutationFn: loginByPassword,
@@ -45,19 +64,22 @@ const LoginPage: React.FC = () => {
       navigate(from ? `${from.pathname}${from.search ?? ''}` : '/', { replace: true })
     },
     onError: (err) => {
-      // 401：账号或密码错误（request.ts 已判断在 /user/login 页跳过跳转，此处显示行内提示）
+      // 401：登录失败（request.ts 已判断在 /user/login 页跳过跳转，此处显示行内提示）
       // 403/500/网络错误：request.ts 全局 notification 已处理，此处静默丢弃
       if (err instanceof ApiError && err.code === 401) {
-        setLoginError(t('pages.login.accountLogin.errorMessage'))
+        setLoginError(err.message)
       } else if (!(err instanceof ApiError)) {
         message.error(t('pages.login.failure'))
       }
     },
   })
 
-  const handleSubmit = (values: Record<string, string>) => {
+  const handleSubmit = (values: LoginFormValues) => {
     setLoginError('')
-    submitLogin({ userName: values.username, password: values.password })
+    const autoLogin = values.autoLogin ?? true
+    setRememberMe(autoLogin)
+    const encodedPassword = encodePasswordToBase64(values.password)
+    submitLogin({ userName: values.username, password: encodedPassword })
   }
 
   return (
@@ -76,7 +98,7 @@ const LoginPage: React.FC = () => {
           initialValues={{ autoLogin: true }}
           loading={isPending}
           onFinish={async (values) => {
-            handleSubmit(values as Record<string, string>)
+            handleSubmit(values as LoginFormValues)
           }}
         >
           <Tabs

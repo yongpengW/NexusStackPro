@@ -145,7 +145,7 @@ function handleGlobalError(code: number, message: string): void {
 
     case 500:
       globalNotification.error({
-        message: '服务器错误',
+        message: '错误',
         description: message || '服务器内部错误，请稍后重试',
         duration: 4,
       })
@@ -160,7 +160,8 @@ function handleGlobalError(code: number, message: string): void {
 // ─── 请求头 ───────────────────────────────────────────────────────────────────
 
 function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem('access_token')
+  const state = useAppStore.getState()
+  const token = state.token ?? localStorage.getItem('access_token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 

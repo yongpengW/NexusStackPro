@@ -6,6 +6,7 @@ import type { LoginResult } from '@/services/auth'
 const TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_INFO_KEY = 'user_info'
+const REMEMBER_ME_KEY = 'remember_me'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,8 @@ export type UserInfo = Pick<LoginResult, 'userId' | 'userName' | 'email'> & {
 interface AppState {
   /** 全局 loading 状态 */
   loading: boolean
+  /** 是否开启自动登录（记住登录状态） */
+  rememberMe: boolean
   /** 登录用户信息 */
   userInfo: UserInfo | null
   /** 访问 token */
@@ -25,6 +28,8 @@ interface AppState {
   refreshToken: string | null
 
   setLoading: (loading: boolean) => void
+  /** 设置是否自动登录 */
+  setRememberMe: (remember: boolean) => void
   /** 登录成功后统一写入用户信息和双 token */
   setLoginData: (result: LoginResult) => void
   /** 登出：清空状态与 localStorage */
@@ -44,15 +49,31 @@ function restoreUserInfo(): UserInfo | null {
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 
+const initialRememberMe = localStorage.getItem(REMEMBER_ME_KEY) === '1'
+
 export const useAppStore = create<AppState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       loading: false,
-      userInfo: restoreUserInfo(),
-      token: localStorage.getItem(TOKEN_KEY),
-      refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
+      rememberMe: initialRememberMe,
+      userInfo: initialRememberMe ? restoreUserInfo() : null,
+      token: initialRememberMe ? localStorage.getItem(TOKEN_KEY) : null,
+      refreshToken: initialRememberMe ? localStorage.getItem(REFRESH_TOKEN_KEY) : null,
 
       setLoading: (loading) => set({ loading }, false, 'setLoading'),
+
+      setRememberMe: (remember) => {
+        set({ rememberMe: remember }, false, 'setRememberMe')
+        if (remember) {
+          localStorage.setItem(REMEMBER_ME_KEY, '1')
+        } else {
+          localStorage.removeItem(REMEMBER_ME_KEY)
+          // 关闭自动登录时，同时清理持久化的凭据
+          localStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(REFRESH_TOKEN_KEY)
+          localStorage.removeItem(USER_INFO_KEY)
+        }
+      },
 
       setLoginData: (result) => {
         const userInfo: UserInfo = {
@@ -60,10 +81,20 @@ export const useAppStore = create<AppState>()(
           userName: result.userName,
           email: result.email,
         }
-        // 持久化到 localStorage
-        localStorage.setItem(TOKEN_KEY, result.token)
-        localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken)
-        localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo))
+        const remember = get().rememberMe
+
+        if (remember) {
+          // 仅在开启自动登录时持久化到 localStorage
+          localStorage.setItem(REMEMBER_ME_KEY, '1')
+          localStorage.setItem(TOKEN_KEY, result.token)
+          localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken)
+          localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo))
+        } else {
+          // 会话登录：确保本地持久化的历史凭据被清理
+          localStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(REFRESH_TOKEN_KEY)
+          localStorage.removeItem(USER_INFO_KEY)
+        }
 
         set(
           { userInfo, token: result.token, refreshToken: result.refreshToken },
@@ -76,7 +107,12 @@ export const useAppStore = create<AppState>()(
         localStorage.removeItem(TOKEN_KEY)
         localStorage.removeItem(REFRESH_TOKEN_KEY)
         localStorage.removeItem(USER_INFO_KEY)
-        set({ userInfo: null, token: null, refreshToken: null }, false, 'logout')
+        localStorage.removeItem(REMEMBER_ME_KEY)
+        set(
+          { userInfo: null, token: null, refreshToken: null, rememberMe: false },
+          false,
+          'logout',
+        )
       },
     }),
     { name: 'AppStore' },

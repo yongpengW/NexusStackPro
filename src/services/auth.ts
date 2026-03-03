@@ -40,6 +40,14 @@ export function loginByPassword(params: PasswordLoginParams) {
 }
 
 /**
+ * 退出登录 To Do
+ * POST /Token/signout
+ */
+export function signout() {
+  return http.post<boolean>('/Token/signout', {})
+}
+
+/**
  * 刷新 Token
  * POST /Token/Refresh
  */
