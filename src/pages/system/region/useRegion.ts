@@ -6,7 +6,6 @@ import type { RegionTreeDto, RegionDto } from '@/services/region'
 
 export const REGION_QUERY_KEYS = {
   tree: ['region', 'tree'] as const,
-  list: (keyword: string) => ['region', 'list', keyword] as const,
   detail: (id: number) => ['region', 'detail', id] as const,
   selector: ['region', 'selector'] as const,
 }
@@ -20,24 +19,14 @@ export function useRegion() {
   /** 当前正在进行启用/禁用/删除操作的行 id */
   const [operatingId, setOperatingId] = useState<number | null>(null)
 
-  // ─── 树形数据（无关键词时） ──────────────────────────────────────────────
+  // ─── 树形数据（作为单一数据源） ──────────────────────────────────────────
   const treeQuery = useQuery({
     queryKey: REGION_QUERY_KEYS.tree,
-    queryFn: () => RegionApi.getTree(),
-    enabled: !keyword,
+    queryFn: () => RegionApi.getTree({ includeChilds: true }),
   })
-
-  // ─── 扁平搜索结果（有关键词时） ──────────────────────────────────────────
-  const listQuery = useQuery({
-    queryKey: REGION_QUERY_KEYS.list(keyword),
-    queryFn: () => RegionApi.getList({ keyword }),
-    enabled: !!keyword,
-  })
-
-  const isLoading = keyword ? listQuery.isLoading : treeQuery.isLoading
-  const dataSource: (RegionTreeDto | RegionDto)[] = keyword
-    ? (listQuery.data ?? [])
-    : (treeQuery.data ?? [])
+  const treeData = (treeQuery.data ?? []) as RegionTreeDto[]
+  const isLoading = treeQuery.isLoading
+  const dataSource: (RegionTreeDto | RegionDto)[] = treeData
 
   // ─── 刷新 ────────────────────────────────────────────────────────────────
   const refresh = useCallback(() => {
@@ -126,6 +115,7 @@ export function useRegion() {
     setKeyword,
     isLoading,
     dataSource,
+    treeData,
     operatingId,
     refresh,
     handleEnable,

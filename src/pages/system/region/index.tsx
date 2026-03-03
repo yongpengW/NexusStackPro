@@ -7,10 +7,14 @@ import {
   Space,
   Dropdown,
   Tooltip,
+  Tree,
+  Card,
 } from 'antd'
 import type { TableColumnsType, MenuProps } from 'antd'
+import type { DataNode, TreeProps } from 'antd/es/tree'
 import {
   PlusOutlined,
+  MinusOutlined,
   SearchOutlined,
   ReloadOutlined,
   DownOutlined,
@@ -35,6 +39,48 @@ function collectAllKeys(nodes: RegionTreeDto[]): number[] {
   }
   walk(nodes)
   return keys
+}
+
+// ─── 将后端 RegionTreeDto 转为 antd Tree 需要的 DataNode ──────────────────────
+
+type RegionTreeNode = DataNode & { nodeData?: RegionTreeDto }
+
+function toTreeData(nodes: RegionTreeDto[]): RegionTreeNode[] {
+  return nodes.map((n) => ({
+    key: n.id,
+    title: n.name,
+    nodeData: n,
+    children: n.children?.length ? toTreeData(n.children) : undefined,
+  }))
+}
+
+// ─── 根据 id 在树中查找节点 ────────────────────────────────────────────────────
+
+function findRegionNode(nodes: RegionTreeDto[], id: number): RegionTreeDto | null {
+  for (const n of nodes) {
+    if (n.id === id) return n
+    if (n.children?.length) {
+      const child = findRegionNode(n.children, id)
+      if (child) return child
+    }
+  }
+  return null
+}
+
+// ─── 拍平整棵树并按 id 去重 ────────────────────────────────────────────────────
+
+function flattenRegionsUnique(nodes: RegionTreeDto[]): RegionDto[] {
+  // 以 parentId + name + code + level 作为逻辑唯一键，防止同一节点被重复渲染
+  const map = new Map<string, RegionDto>()
+  const walk = (list: RegionTreeDto[]) => {
+    list.forEach((n) => {
+      const key = `${n.parentId ?? 0}__${n.name ?? ''}__${n.code ?? ''}__${n.level}`
+      if (!map.has(key)) map.set(key, n)
+      if (n.children?.length) walk(n.children)
+    })
+  }
+  walk(nodes)
+  return Array.from(map.values())
 }
 
 // ─── 搜索高亮 ────────────────────────────────────────────────────────────────
@@ -63,6 +109,7 @@ export default function RegionPage() {
     setKeyword,
     isLoading,
     dataSource,
+    treeData,
     operatingId,
     refresh,
     handleEnable,
@@ -94,45 +141,80 @@ export default function RegionPage() {
     setKeyword('')
   }
 
-  // ── 展开/收起全部 ────────────────────────────────────────────────────────
+  // ── 左侧树形区域展开 & 选择 ──────────────────────────────────────────────
   const [expandedKeys, setExpandedKeys] = useState<number[]>([])
-  // 使用 ref 标记是否已完成首次默认展开，避免 render 阶段副作用
-  const initialExpandDone = useRef(false)
+  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null)
+  const initialTreeMounted = useRef(false)
 
+  // 首次加载时，默认展开一级节点并选中第一个
   useEffect(() => {
-    if (initialExpandDone.current) return
-    if (!isLoading && !keyword && dataSource.length > 0) {
-      setExpandedKeys((dataSource as RegionTreeDto[]).map((n) => n.id))
-      initialExpandDone.current = true
+    if (initialTreeMounted.current) return
+    if (!isLoading && treeData.length > 0) {
+      const rootIds = treeData.map((n) => n.id)
+      setExpandedKeys(rootIds)
+      setSelectedRegionId((prev) => prev ?? treeData[0].id)
+      initialTreeMounted.current = true
     }
-  }, [isLoading, keyword, dataSource])
+  }, [isLoading, treeData])
 
   const handleExpandAll = () => {
-    setExpandedKeys(collectAllKeys(dataSource as RegionTreeDto[]))
+    setExpandedKeys(collectAllKeys(treeData))
   }
   const handleCollapseAll = () => setExpandedKeys([])
+
+  const handleTreeSelect: TreeProps['onSelect'] = (_keys, info) => {
+    // 避免重复点击同一节点时将选中状态清空（selected=false）导致右侧列表回退到“全部”
+    if (info.selected) {
+      setSelectedRegionId(info.node.key as number)
+    }
+  }
 
   // ── 前端分页（列表/树通用） ─────────────────────────────────────────────
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
+  // 扁平化后的全量区域列表（按逻辑键去重），供列表与操作判断复用
+  const allRegions = useMemo(() => flattenRegionsUnique(treeData), [treeData])
+
+  const filteredData: RegionDto[] = useMemo(() => {
+    const kw = keyword.trim().toLowerCase()
+
+    // 有关键字时：在扁平数据里本地搜索（名称 / 简称 / Code）
+    if (kw) {
+      return allRegions.filter((n) => {
+        const nameHit = n.name?.toLowerCase().includes(kw)
+        const shortHit = n.shortName?.toLowerCase().includes(kw)
+        const codeHit = n.code?.toLowerCase().includes(kw)
+        return !!(nameHit || shortHit || codeHit)
+      })
+    }
+
+    // 无关键字 & 未选中：展示全部
+    if (!selectedRegionId) {
+      return allRegions
+    }
+
+    // 无关键字 & 选中某节点：只展示其直系子节点
+    return allRegions.filter((item) => item.parentId === selectedRegionId)
+  }, [keyword, selectedRegionId, allRegions])
+
   // 关键词或数据源变化时重置到第一页
   useEffect(() => {
     setPage(1)
-  }, [keyword, dataSource.length])
+  }, [keyword, filteredData.length])
 
   // 当前页超出范围时（如切换每页条数后）回退到第一页，避免空白
   useEffect(() => {
-    if (dataSource.length > 0 && (page - 1) * pageSize >= dataSource.length) {
+    if (filteredData.length > 0 && (page - 1) * pageSize >= filteredData.length) {
       setPage(1)
     }
-  }, [dataSource.length, page, pageSize])
+  }, [filteredData.length, page, pageSize])
 
   const pagedData = useMemo(() => {
-    if (!dataSource?.length) return []
+    if (!filteredData?.length) return []
     const start = (page - 1) * pageSize
-    return (dataSource as RegionDto[]).slice(start, start + pageSize)
-  }, [dataSource, page, pageSize])
+    return filteredData.slice(start, start + pageSize)
+  }, [filteredData, page, pageSize])
 
   // ── Drawer 状态 ─────────────────────────────────────────────────────────
   const [drawerOpen,  setDrawerOpen]  = useState(false)
@@ -210,10 +292,8 @@ export default function RegionPage() {
       width: 200,
       render: (_, record) => {
         const treeRecord = record as RegionTreeDto
-        // 树形模式：用 children 长度判断；搜索扁平模式：检查列表中是否有节点以当前行为父级
-        const hasChildren = keyword
-          ? (dataSource as RegionDto[]).some((r) => r.parentId === record.id)
-          : !!(treeRecord.children?.length)
+        // 是否存在子级：统一基于扁平化后的 allRegions 判断，避免搜索/过滤状态导致判断不一致
+        const hasChildren = allRegions.some((r) => r.parentId === record.id)
         const isOperating = operatingId === record.id
 
         const moreItems: MenuProps['items'] = [
@@ -295,91 +375,156 @@ export default function RegionPage() {
         </Button>
       }
     >
-      {/* 搜索栏 */}
-      <Space style={{ marginBottom: 16 }}>
-        <Input
-          allowClear
-          placeholder="搜索名称 / 简称 / Code"
-          value={inputValue}
-          onChange={handleInputChange}
-          onPressEnter={() => {
-            if (debounceTimer.current) clearTimeout(debounceTimer.current)
-            setKeyword(inputValue.trim())
-          }}
-          prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-          style={{ width: 240 }}
-          onClear={handleReset}
-        />
-        <Button
-          type="primary"
-          icon={<SearchOutlined />}
-          onClick={() => {
-            if (debounceTimer.current) clearTimeout(debounceTimer.current)
-            setKeyword(inputValue.trim())
-          }}
-        >
-          搜索
-        </Button>
-        <Button icon={<ReloadOutlined />} onClick={handleReset}>
-          重置
-        </Button>
-        {/* 展开/收起仅在树形视图下显示 */}
-        {!keyword && (
-          <>
-            <Button
-              size="small"
-              icon={<ExpandAltOutlined />}
-              onClick={handleExpandAll}
-            >
-              展开全部
-            </Button>
-            <Button
-              size="small"
-              icon={<ShrinkOutlined />}
-              onClick={handleCollapseAll}
-            >
-              收起全部
-            </Button>
-          </>
-        )}
-      </Space>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+        {/* 左侧层级树 */}
+        <div style={{ width: 260, minWidth: 220 }}>
+          <Card
+            title="区域层级"
+            size="small"
+            styles={{ body: { padding: 8, maxHeight: 520, overflow: 'auto' } }}
+            extra={
+              !keyword && (
+                <Space size={4}>
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<ExpandAltOutlined />}
+                    onClick={handleExpandAll}
+                  >
+                    展开
+                  </Button>
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<ShrinkOutlined />}
+                    onClick={handleCollapseAll}
+                  >
+                    收起
+                  </Button>
+                </Space>
+              )
+            }
+          >
+            <Tree
+              showLine={{ showLeafIcon: false }}
+              treeData={toTreeData(treeData)}
+              expandedKeys={expandedKeys}
+              selectedKeys={selectedRegionId ? [selectedRegionId] : []}
+              onExpand={(keys) => setExpandedKeys(keys as number[])}
+              onSelect={handleTreeSelect}
+              titleRender={(node) => {
+                const regionNode = node as RegionTreeNode
+                const region = regionNode.nodeData
+                if (!region) return <span>{node.title}</span>
 
-      {/* 树形表格 */}
-      <Table<RegionDto>
-        rowKey="id"
-        size="middle"
-        columns={columns}
-        dataSource={pagedData as RegionDto[]}
-        loading={isLoading}
-        pagination={{
-          current: page,
-          pageSize,
-          total: dataSource.length,
-          showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 条`,
-          onChange: (current, size) => {
-            setPage(current)
-            setPageSize(size)
-          },
-        }}
-        expandable={
-          keyword
-            ? undefined
-            : {
-                expandedRowKeys: expandedKeys,
-                onExpandedRowsChange: (keys) =>
-                  setExpandedKeys(keys as number[]),
-              }
-        }
-        onRow={(record) => ({
-          style: !record.isEnable ? { opacity: 0.5 } : undefined,
-        })}
-        locale={{
-          emptyText: keyword
-            ? '未找到匹配的区域，请更换关键词'
-            : '暂无区域数据，点击右上角"新增根节点"',
-        }}
-      />
+                const hasChildren = !!region.children?.length
+                const menuItems: MenuProps['items'] = [
+                  {
+                    key: 'addChild',
+                    label: '新增子级',
+                    icon: <PlusOutlined />,
+                    onClick: () => openAddChild(region),
+                  },
+                  {
+                    key: 'edit',
+                    label: '编辑',
+                    icon: <DownOutlined rotate={180} />, // 复用图标，避免额外引入
+                    onClick: () => openEdit(region.id),
+                  },
+                  {
+                    key: 'delete',
+                    label: hasChildren ? (
+                      <Tooltip title="请先删除子级区域">
+                        <span style={{ pointerEvents: 'all', cursor: 'not-allowed' }}>
+                          删除
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      '删除'
+                    ),
+                    icon: <MinusOutlined />,
+                    danger: true,
+                    disabled: hasChildren,
+                    onClick: () => {
+                      if (!hasChildren) {
+                        handleDelete(region)
+                      }
+                    },
+                  },
+                ]
+
+                return (
+                  <Dropdown menu={{ items: menuItems }} trigger={['contextMenu']}>
+                    <span style={{ display: 'inline-block', width: '100%' }}>
+                      {region.name}
+                    </span>
+                  </Dropdown>
+                )
+              }}
+            />
+          </Card>
+        </div>
+
+        {/* 右侧列表区 */}
+        <div style={{ flex: 1 }}>
+          {/* 搜索栏 */}
+          <Space style={{ marginBottom: 16 }}>
+            <Input
+              allowClear
+              placeholder="搜索名称 / 简称 / Code"
+              value={inputValue}
+              onChange={handleInputChange}
+              onPressEnter={() => {
+                if (debounceTimer.current) clearTimeout(debounceTimer.current)
+                setKeyword(inputValue.trim())
+              }}
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              style={{ width: 240 }}
+              onClear={handleReset}
+            />
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={() => {
+                if (debounceTimer.current) clearTimeout(debounceTimer.current)
+                setKeyword(inputValue.trim())
+              }}
+            >
+              搜索
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={handleReset}>
+              重置
+            </Button>
+          </Space>
+
+          <Table<RegionDto>
+            rowKey="id"
+            size="middle"
+            columns={columns}
+            dataSource={pagedData as RegionDto[]}
+            loading={isLoading}
+            pagination={{
+              current: page,
+              pageSize,
+              total: filteredData.length,
+              showSizeChanger: true,
+              showTotal: (total) => `共 ${total} 条`,
+              onChange: (current, size) => {
+                setPage(current)
+                setPageSize(size)
+              },
+            }}
+            onRow={(record) => ({
+              style: !record.isEnable ? { opacity: 0.5 } : undefined,
+            })}
+            locale={{
+              emptyText: keyword
+                ? '未找到匹配的区域，请更换关键词'
+                : '暂无区域数据，点击右上角\"新增根节点\"',
+            }}
+          />
+        </div>
+      </div>
 
       {/* 新增 / 编辑 Drawer */}
       <RegionDrawer
