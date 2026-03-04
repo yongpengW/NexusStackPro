@@ -173,10 +173,6 @@ const zhCN = {
   'pages.account.settings.unbind.bound': '已绑定 {{phone}}',
   'pages.account.settings.bind.wip': '{{action}}功能开发中',
 
-  // Admin 页
-  'pages.admin.subTitle': '该页面仅管理员可见',
-  'pages.admin.alertMessage': '更快更强的重型组件已发布。',
-
   // 404
   'pages.404.subTitle': '抱歉，您访问的页面不存在。',
   'pages.404.backHome': '返回首页',

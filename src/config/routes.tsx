@@ -34,8 +34,6 @@ export const useMenuRoutes = () => {
     path: '/',
     routes: [
       { path: '/home', name: t('menu.home'), icon: <HomeOutlined /> },
-      { path: '/welcome', name: t('menu.welcome'), icon: <SmileOutlined /> },
-      { path: '/admin', name: t('menu.admin'), icon: <CrownOutlined /> },
       {
         path: '/dashboard',
         name: t('menu.dashboard'),

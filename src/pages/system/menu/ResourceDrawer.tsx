@@ -36,6 +36,21 @@ function collectCheckedIds(list: MenuResourceDto[]): number[] {
   return ids
 }
 
+function getMethodColor(method?: string) {
+  switch ((method ?? '').toUpperCase()) {
+    case 'GET':
+      return 'green'
+    case 'POST':
+      return 'blue'
+    case 'PUT':
+      return 'orange'
+    case 'DELETE':
+      return 'red'
+    default:
+      return 'default'
+  }
+}
+
 export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
   const { message } = App.useApp()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -94,6 +109,7 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
     onSuccess: () => {
       message.success('接口绑定已保存')
       setErrorMsg(null)
+      onClose()
     },
     onError: (err: Error) => setErrorMsg(err.message ?? '保存失败'),
   })
@@ -174,7 +190,7 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
                           <Checkbox key={op.id} value={op.id}>
                             <Space>
                               {method && (
-                                <Tag color="blue">{method}</Tag>
+                                <Tag color={getMethodColor(method)}>{method}</Tag>
                               )}
                               <span>{op.routePattern || routeTemplate}</span>
                               <span style={{ color: 'var(--ant-color-text-tertiary)' }}>{op.name}</span>

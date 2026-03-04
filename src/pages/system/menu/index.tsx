@@ -21,6 +21,7 @@ import {
   CloseOutlined,
   SearchOutlined,
   ReloadOutlined,
+  MinusOutlined,
 } from '@ant-design/icons'
 import { PageContainer, ProTable } from '@ant-design/pro-components'
 import type { ProColumns } from '@ant-design/pro-components'
@@ -179,11 +180,20 @@ export default function MenuPage() {
       title: '菜单名称',
       dataIndex: 'name',
       key: 'name',
+      width: 120,
+      ellipsis: true,
       render: (_, record) => (
         <span style={!record.isVisible ? { opacity: 0.5 } : undefined}>
           {record.name}
         </span>
       ),
+    },
+    {
+      title: '编码',
+      dataIndex: 'code',
+      key: 'code',
+      width: 140,
+      ellipsis: true,
     },
     {
       title: '类型',
@@ -196,7 +206,7 @@ export default function MenuPage() {
       title: '图标',
       dataIndex: 'icon',
       key: 'icon',
-      width: 80,
+      width: 120,
       render: (_, record) => {
         const icon = record.icon
         if (!icon) return '—'
@@ -210,7 +220,7 @@ export default function MenuPage() {
       title: '路由 URL',
       dataIndex: 'url',
       key: 'url',
-      width: 160,
+      width: 220,
       ellipsis: true,
       render: (_, record) =>
         record.type === MenuType.Menu ? (record.url || '—') : '—',
@@ -226,12 +236,16 @@ export default function MenuPage() {
       dataIndex: 'isVisible',
       key: 'isVisible',
       width: 60,
-      render: (_, record) =>
-        record.isVisible ? (
-          <CheckOutlined style={{ color: 'var(--ant-color-success)' }} />
+      render: (_, record) => {
+        if (record.type === MenuType.Operation) {
+          return '—'
+        }
+        return record.isVisible ? (
+          <CheckOutlined style={{ color: '#52c41a' }} />
         ) : (
-          <CloseOutlined style={{ color: 'var(--ant-color-text-tertiary)' }} />
-        ),
+          <CloseOutlined style={{ color: '#ff4d4f' }} />
+        )
+      },
     },
     {
       title: '平台',
@@ -354,6 +368,68 @@ export default function MenuPage() {
               selectedKeys={selectedMenuId ? [selectedMenuId] : []}
               onExpand={(keys) => setExpandedKeys(keys as number[])}
               onSelect={handleTreeSelect}
+              titleRender={(node) => {
+                const menuNode = node as MenuTreeNode
+                const menu = menuNode.nodeData
+                if (!menu) return <span>{node.title as string}</span>
+
+                const hasChildren = !!menu.children?.length
+                const isOperation = menu.type === MenuType.Operation
+
+                const menuItems: MenuProps['items'] = [
+                  !isOperation && {
+                    key: 'addChild',
+                    label: '新增子项',
+                    icon: <PlusOutlined />,
+                    onClick: () => openAddChild(menu),
+                  },
+                  isOperation && {
+                    key: 'bind',
+                    label: '绑定接口',
+                    onClick: () => openResourceDrawer(menu),
+                  },
+                  {
+                    key: 'edit',
+                    label: '编辑',
+                    icon: <DownOutlined rotate={180} />,
+                    onClick: () => openEdit(menu.id),
+                  },
+                  {
+                    key: 'delete',
+                    label: hasChildren ? (
+                      <Tooltip title="请先删除子级菜单">
+                        <span style={{ pointerEvents: 'all', cursor: 'not-allowed' }}>
+                          删除
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      '删除'
+                    ),
+                    icon: <MinusOutlined />,
+                    danger: true,
+                    disabled: hasChildren,
+                    onClick: () => {
+                      if (!hasChildren) {
+                        handleDelete(menu)
+                      }
+                    },
+                  },
+                ].filter(Boolean)
+
+                return (
+                  <Dropdown menu={{ items: menuItems }} trigger={['contextMenu']}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '100%',
+                        opacity: menu.isVisible ? 1 : 0.55,
+                      }}
+                    >
+                      {menu.name}
+                    </span>
+                  </Dropdown>
+                )
+              }}
             />
           </Card>
         </div>

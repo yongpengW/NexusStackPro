@@ -173,10 +173,6 @@ const enUS = {
   'pages.account.settings.unbind.bound': 'Bound: {{phone}}',
   'pages.account.settings.bind.wip': '{{action}} coming soon',
 
-  // Admin page
-  'pages.admin.subTitle': 'This page can only be viewed by admin.',
-  'pages.admin.alertMessage': 'Faster and stronger heavy-duty components have been released.',
-
   // 404
   'pages.404.subTitle': 'Sorry, the page you visited does not exist.',
   'pages.404.backHome': 'Back Home',

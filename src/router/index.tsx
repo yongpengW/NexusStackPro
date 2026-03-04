@@ -7,8 +7,6 @@ import NotFoundPage from '@/pages/not-found'
 import AnalysisPage from '@/pages/analysis'
 import RuleListPage from '@/pages/list/rule-list'
 import AccountSettingsPage from '@/pages/account/settings'
-import WelcomePage from '@/pages/welcome'
-import AdminPage from '@/pages/admin'
 
 // Dashboard
 import DashboardAnalysisPage from '@/pages/dashboard/analysis'
@@ -47,7 +45,6 @@ import RegionPage from '@/pages/system/region'
 import RolePage   from '@/pages/system/role'
 import MenuPage   from '@/pages/system/menu'
 import UserPage   from '@/pages/system/user'
-import PermissionPage from '@/pages/system/permission'
 import OrgPage from '@/pages/system/org'
 
 export const router = createBrowserRouter([
@@ -63,8 +60,6 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard/analysis" replace /> },
       { path: 'home', element: <HomePage /> },
-      { path: 'welcome', element: <WelcomePage /> },
-      { path: 'admin', element: <AdminPage /> },
       // 旧路径兼容
       { path: 'analysis', element: <AnalysisPage /> },
 

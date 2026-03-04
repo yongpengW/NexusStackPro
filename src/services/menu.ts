@@ -117,10 +117,19 @@ export interface MenuTreeQueryDto {
 // ─── API ────────────────────────────────────────────────────────────────────
 
 export const MenuApi = {
-  getTree: (platformType: number, params?: MenuTreeQueryDto) =>
-    http.get<MenuTreeDto[]>(
-      buildUrl(`/Menu/tree/${platformType}`, params as Record<string, string | number | boolean | undefined | null>),
-    ),
+  getTree: (platformType: number, params?: MenuTreeQueryDto) => {
+    const finalParams: MenuTreeQueryDto = {
+      includeChilds: true,
+      ...(params ?? {}),
+    }
+
+    return http.get<MenuTreeDto[]>(
+      buildUrl(
+        `/Menu/tree/${platformType}`,
+        finalParams as Record<string, string | number | boolean | undefined | null>,
+      ),
+    )
+  },
 
   getById: (id: number) =>
     http.get<MenuDto>(`/Menu/${id}`),
