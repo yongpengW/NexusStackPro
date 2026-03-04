@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Avatar, Button, Dropdown, Space, Tag, Tooltip } from 'antd'
 import type { MenuProps } from 'antd'
 import { PageContainer, ProTable } from '@ant-design/pro-components'
@@ -7,6 +8,7 @@ import { PlusOutlined, DownOutlined } from '@ant-design/icons'
 import { PLATFORM_META, parsePlatformFlags } from '@/services/role'
 import { RoleApi } from '@/services/role'
 import type { SelectOptionDto as RoleSelectOptionDto } from '@/services/role'
+import { RegionApi } from '@/services/region'
 import { UserApi } from '@/services/user'
 import type { UserDto } from '@/services/user'
 import { useUser } from './useUser'
@@ -39,6 +41,16 @@ export default function UserPage() {
   }
 
   const isCurrentUser = (record: UserDto) => currentUser && record.id === currentUser.id
+
+  const { data: regionList } = useQuery({
+    queryKey: ['region', 'list'],
+    queryFn: () => RegionApi.getList({}),
+    staleTime: 5 * 60 * 1000,
+  })
+  const regionIdToName = useMemo(
+    () => Object.fromEntries((regionList ?? []).map((r) => [r.id, r.name])),
+    [regionList],
+  )
 
   const columns: ProColumns<UserDto>[] = [
     {
@@ -92,6 +104,22 @@ export default function UserPage() {
               ) : null
             }),
           )}
+        </Space>
+      ),
+    },
+    {
+      title: '所属组织',
+      dataIndex: 'departments',
+      key: 'departments',
+      search: false,
+      render: (_, record) => (
+        <Space size={4} wrap>
+          {record.departments?.map((d) => (
+            <Tag key={d.departmentId}>
+              {regionIdToName[d.departmentId] ?? `#${d.departmentId}`}
+            </Tag>
+          ))}
+          {(!record.departments || record.departments.length === 0) && '—'}
         </Space>
       ),
     },

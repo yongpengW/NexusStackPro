@@ -227,9 +227,12 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
           <Form.Item
             label="邮箱"
             name="email"
-            rules={[{ type: 'email', message: '邮箱格式不正确' }]}
+            rules={[
+              { required: true, message: '邮箱不能为空' },
+              { type: 'email', message: '邮箱格式不正确' },
+            ]}
           >
-            <Input placeholder="可选" maxLength={120} />
+            <Input placeholder="请输入邮箱" maxLength={120} />
           </Form.Item>
 
           <Form.Item label="性别" name="gender">
