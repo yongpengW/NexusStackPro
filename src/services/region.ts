@@ -82,6 +82,10 @@ export const RegionApi = {
       buildUrl('/Region/selector', { level, isIncludeZero }),
     ),
 
+  /** GET /api/Region/treeSelector — 树状选择器（含 children） */
+  getTreeSelector: () =>
+    http.get<SelectOptionDto[]>('/Region/treeSelector'),
+
   /** GET /api/Region/{id} — 单条详情（编辑回显用） */
   getById: (id: number) =>
     http.get<RegionDto>(`/Region/${id}`),

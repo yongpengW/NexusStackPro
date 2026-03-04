@@ -45,7 +45,8 @@ export default function UserPage() {
       title: '头像',
       dataIndex: 'avatar',
       key: 'avatar',
-      width: 64,
+      width: 72,
+      align: 'center',
       search: false,
       render: (_, record) => (
         <Avatar src={record.avatar}>
@@ -231,40 +232,43 @@ export default function UserPage() {
   ]
 
   return (
-    <PageContainer
-      title="用户管理"
-      extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
-          新增用户
-        </Button>
-      }
-    >
+    <PageContainer title="用户管理">
       <ProTable<UserDto>
-        actionRef={actionRef}
-        rowKey="id"
-        columns={columns}
-        search={{ labelWidth: 'auto' }}
-        toolBarRender={false}
-        request={async (params) => {
-          const { current, pageSize, userName, mobile, email, roleId, isEnable } = params
-          const result = await UserApi.getList({
-            page: current ?? 1,
-            limit: pageSize ?? 10,
-            userName: userName as string | undefined,
-            mobile: mobile as string | undefined,
-            email: email as string | undefined,
-            roleId: roleId ? Number(roleId) : undefined,
-            isEnable:
-              isEnable === 'true'
-                ? true
-                : isEnable === 'false'
-                ? false
-                : (isEnable as boolean | undefined),
-          })
-          return { data: result.items, total: result.total, success: true }
-        }}
-        pagination={{ defaultPageSize: 10, showSizeChanger: true }}
-      />
+          headerTitle="用户列表"
+          actionRef={actionRef}
+          rowKey="id"
+          columns={columns}
+          search={{ labelWidth: 'auto' }}
+          toolBarRender={() => [
+            <Button
+              key="add"
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={openAdd}
+            >
+              新增用户
+            </Button>,
+          ]}
+          request={async (params) => {
+            const { current, pageSize, userName, mobile, email, roleId, isEnable } = params
+            const result = await UserApi.getList({
+              page: current ?? 1,
+              limit: pageSize ?? 10,
+              userName: userName as string | undefined,
+              mobile: mobile as string | undefined,
+              email: email as string | undefined,
+              roleId: roleId ? Number(roleId) : undefined,
+              isEnable:
+                isEnable === 'true'
+                  ? true
+                  : isEnable === 'false'
+                  ? false
+                  : (isEnable as boolean | undefined),
+            })
+            return { data: result.items, total: result.total, success: true }
+          }}
+          pagination={{ defaultPageSize: 10, showSizeChanger: true }}
+        />
 
       <UserDrawer
         open={drawerOpen}

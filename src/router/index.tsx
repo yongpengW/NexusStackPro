@@ -153,7 +153,7 @@ export const router = createBrowserRouter([
           { path: 'role',   element: <RolePage /> },
           { path: 'menu',   element: <MenuPage /> },
           { path: 'user',   element: <UserPage /> },
-          { path: 'permission', element: <PermissionPage /> },
+          //{ path: 'permission', element: <PermissionPage /> },
           { path: 'org', element: <OrgPage /> },
         ],
       },

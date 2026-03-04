@@ -12,6 +12,7 @@ import {
   Space,
   Spin,
   Switch,
+  TreeSelect,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserApi, Gender, type CreateUserDto, type UserDto } from '@/services/user'
@@ -41,7 +42,7 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
 
   const regionSelectorQuery = useQuery({
     queryKey: ['user', 'region-selector'],
-    queryFn: () => RegionApi.getSelector(undefined, false),
+    queryFn: () => RegionApi.getTreeSelector(),
     enabled: open,
     staleTime: 60 * 1000,
   })
@@ -144,11 +145,8 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
       value: r.value,
     })) ?? []
 
-  const departmentOptions =
-    (regionSelectorQuery.data as RegionSelectOptionDto[] | undefined)?.map((d) => ({
-      label: d.label,
-      value: d.value,
-    })) ?? []
+  const departmentTree =
+    (regionSelectorQuery.data as RegionSelectOptionDto[] | undefined) ?? []
 
   const title = isEdit ? '编辑用户' : '新增用户'
 
@@ -264,12 +262,17 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
           </Form.Item>
 
           <Form.Item label="所属组织" name="departmentIds">
-            <Select
-              mode="multiple"
-              options={departmentOptions}
+            <TreeSelect
+              treeData={departmentTree}
+              fieldNames={{ label: 'label', value: 'value', children: 'children' }}
+              treeCheckable
+              showCheckedStrategy={TreeSelect.SHOW_PARENT}
               placeholder="可多选"
               loading={regionSelectorQuery.isLoading}
               allowClear
+              showSearch
+              treeDefaultExpandAll
+              maxTagCount="responsive"
             />
           </Form.Item>
 

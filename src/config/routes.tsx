@@ -120,7 +120,7 @@ export const useMenuRoutes = () => {
           // 用户：头像图标
           { path: '/system/user',   name: t('menu.system.user'),   icon: <UserOutlined /> },
           // 权限：安全证书图标
-          { path: '/system/permission', name: t('menu.system.permission'), icon: <SafetyCertificateOutlined /> },
+          //{ path: '/system/permission', name: t('menu.system.permission'), icon: <SafetyCertificateOutlined /> },
         ],
       },
     ],
