@@ -1,14 +1,17 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
-  Table,
   Button,
   Radio,
   Space,
   Tag,
   Tooltip,
   Dropdown,
+  Tree,
+  Card,
+  Input,
 } from 'antd'
-import type { TableColumnsType, MenuProps } from 'antd'
+import type { MenuProps } from 'antd'
+import type { DataNode, TreeProps } from 'antd/es/tree'
 import {
   PlusOutlined,
   DownOutlined,
@@ -16,8 +19,11 @@ import {
   ShrinkOutlined,
   CheckOutlined,
   CloseOutlined,
+  SearchOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
-import { PageContainer } from '@ant-design/pro-components'
+import { PageContainer, ProTable } from '@ant-design/pro-components'
+import type { ProColumns } from '@ant-design/pro-components'
 import {
   MenuType,
   MenuTypeLabels,
@@ -50,17 +56,63 @@ function collectAllKeys(nodes: MenuTreeDto[]): number[] {
   return keys
 }
 
+type MenuTreeNode = DataNode & { nodeData?: MenuTreeDto }
+
+function toTreeData(nodes: MenuTreeDto[]): MenuTreeNode[] {
+  return nodes.map((n) => ({
+    key: n.id,
+    title: n.name,
+    nodeData: n,
+    children: n.children?.length ? toTreeData(n.children) : undefined,
+  }))
+}
+
+function flattenMenus(nodes: MenuTreeDto[]): MenuDto[] {
+  const list: MenuDto[] = []
+  const walk = (arr: MenuTreeDto[]) => {
+    arr.forEach((n) => {
+      list.push(n)
+      if (n.children?.length) walk(n.children)
+    })
+  }
+  walk(nodes)
+  return list
+}
+
 export default function MenuPage() {
   const [platformType, setPlatformType] = useState<number>(PlatformType.All)
 
   const { dataSource, isLoading, operatingId, refresh, handleDelete } = useMenu(platformType)
 
+  const [keyword, setKeyword] = useState('')
+  const [inputValue, setInputValue] = useState('')
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const triggerSearch = (value: string) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => setKeyword(value.trim()), 300)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value
+    setInputValue(v)
+    triggerSearch(v)
+  }
+
+  const handleReset = () => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    setInputValue('')
+    setKeyword('')
+  }
+
   const [expandedKeys, setExpandedKeys] = useState<number[]>([])
+  const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null)
   const initialExpandDone = useRef(false)
   useEffect(() => {
     if (initialExpandDone.current) return
     if (!isLoading && dataSource.length > 0) {
       setExpandedKeys(dataSource.map((n) => n.id))
+      setSelectedMenuId((prev) => prev ?? dataSource[0].id)
       initialExpandDone.current = true
     }
   }, [isLoading, dataSource])
@@ -68,11 +120,37 @@ export default function MenuPage() {
   const handleExpandAll = () => setExpandedKeys(collectAllKeys(dataSource))
   const handleCollapseAll = () => setExpandedKeys([])
 
+  const handleTreeSelect: TreeProps['onSelect'] = (_keys, info) => {
+    if (info.selected) {
+      setSelectedMenuId(info.node.key as number)
+    }
+  }
+
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
   const [editId, setEditId] = useState<number | null>(null)
   const [parentNode, setParentNode] = useState<MenuTreeDto | null>(null)
   const [resourceDrawerOpen, setResourceDrawerOpen] = useState(false)
   const [resourceMenu, setResourceMenu] = useState<MenuDto | null>(null)
+
+  const allMenus = useMemo(() => flattenMenus(dataSource), [dataSource])
+  const filteredMenus = useMemo(
+    () => {
+      const kw = keyword.trim().toLowerCase()
+      if (kw) {
+        return allMenus.filter((m) => {
+          const nameHit = m.name?.toLowerCase().includes(kw)
+          const codeHit = m.code?.toLowerCase().includes(kw)
+          const urlHit = m.url?.toLowerCase().includes(kw)
+          return !!(nameHit || codeHit || urlHit)
+        })
+      }
+
+      return selectedMenuId
+        ? allMenus.filter((m) => m.parentId === selectedMenuId)
+        : allMenus
+    },
+    [allMenus, selectedMenuId, keyword],
+  )
 
   const openAddRoot = () => {
     setEditId(null)
@@ -96,14 +174,14 @@ export default function MenuPage() {
   const closeMenuDrawer = () => setMenuDrawerOpen(false)
   const closeResourceDrawer = () => setResourceDrawerOpen(false)
 
-  const columns: TableColumnsType<MenuDto> = [
+  const columns: ProColumns<MenuDto>[] = [
     {
       title: '菜单名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string, record) => (
+      render: (_, record) => (
         <span style={!record.isVisible ? { opacity: 0.5 } : undefined}>
-          {text}
+          {record.name}
         </span>
       ),
     },
@@ -112,14 +190,15 @@ export default function MenuPage() {
       dataIndex: 'type',
       key: 'type',
       width: 80,
-      render: (type: number) => MenuTypeLabels[type as MenuType] ?? '—',
+      render: (_, record) => MenuTypeLabels[record.type as MenuType] ?? '—',
     },
     {
       title: '图标',
       dataIndex: 'icon',
       key: 'icon',
       width: 80,
-      render: (icon: string, record) => {
+      render: (_, record) => {
+        const icon = record.icon
         if (!icon) return '—'
         if (record.iconType === MenuIconType.Picture) {
           return <img src={icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} />
@@ -133,8 +212,8 @@ export default function MenuPage() {
       key: 'url',
       width: 160,
       ellipsis: true,
-      render: (url: string, record) =>
-        record.type === MenuType.Menu ? (url || '—') : '—',
+      render: (_, record) =>
+        record.type === MenuType.Menu ? (record.url || '—') : '—',
     },
     {
       title: '排序',
@@ -147,16 +226,20 @@ export default function MenuPage() {
       dataIndex: 'isVisible',
       key: 'isVisible',
       width: 60,
-      render: (v: boolean) =>
-        v ? <CheckOutlined style={{ color: 'var(--ant-color-success)' }} /> : <CloseOutlined style={{ color: 'var(--ant-color-text-tertiary)' }} />,
+      render: (_, record) =>
+        record.isVisible ? (
+          <CheckOutlined style={{ color: 'var(--ant-color-success)' }} />
+        ) : (
+          <CloseOutlined style={{ color: 'var(--ant-color-text-tertiary)' }} />
+        ),
     },
     {
       title: '平台',
       dataIndex: 'platformType',
       key: 'platformType',
       width: 90,
-      render: (p: number) => {
-        const meta = PLATFORM_META[p]
+      render: (_, record) => {
+        const meta = PLATFORM_META[record.platformType]
         return meta ? <Tag color={meta.color}>{meta.label}</Tag> : '—'
       },
     },
@@ -221,14 +304,7 @@ export default function MenuPage() {
   ]
 
   return (
-    <PageContainer
-      title="菜单管理"
-      extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAddRoot}>
-          新增根菜单
-        </Button>
-      }
-    >
+    <PageContainer title="菜单管理">
       <Radio.Group
         value={platformType}
         onChange={(e) => setPlatformType(e.target.value as number)}
@@ -243,31 +319,103 @@ export default function MenuPage() {
         ))}
       </Radio.Group>
 
-      <Space style={{ marginBottom: 16 }}>
-        <Button size="small" icon={<ExpandAltOutlined />} onClick={handleExpandAll}>
-          展开全部
-        </Button>
-        <Button size="small" icon={<ShrinkOutlined />} onClick={handleCollapseAll}>
-          收起全部
-        </Button>
-      </Space>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+        {/* 左侧菜单树 */}
+        <div style={{ width: 260, minWidth: 220 }}>
+          <Card
+            title="菜单层级"
+            size="small"
+            styles={{ body: { padding: 8, maxHeight: 520, overflow: 'auto' } }}
+            extra={
+              <Space size={4}>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<ExpandAltOutlined />}
+                  onClick={handleExpandAll}
+                >
+                  展开
+                </Button>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<ShrinkOutlined />}
+                  onClick={handleCollapseAll}
+                >
+                  收起
+                </Button>
+              </Space>
+            }
+          >
+            <Tree
+              showLine={{ showLeafIcon: false }}
+              treeData={toTreeData(dataSource)}
+              expandedKeys={expandedKeys}
+              selectedKeys={selectedMenuId ? [selectedMenuId] : []}
+              onExpand={(keys) => setExpandedKeys(keys as number[])}
+              onSelect={handleTreeSelect}
+            />
+          </Card>
+        </div>
 
-      <Table<MenuDto>
-        rowKey="id"
-        size="middle"
-        columns={columns}
-        dataSource={dataSource}
-        loading={isLoading}
-        pagination={false}
-        expandable={{
-          expandedRowKeys: expandedKeys,
-          onExpandedRowsChange: (keys) => setExpandedKeys(keys as number[]),
-        }}
-        onRow={(record) => ({
-          style: !record.isVisible ? { opacity: 0.55 } : undefined,
-        })}
-        locale={{ emptyText: '暂无菜单数据，点击右上角「新增根菜单」' }}
-      />
+        {/* 右侧列表 */}
+        <div style={{ flex: 1 }}>
+          {/* 搜索栏 */}
+          <Space style={{ marginBottom: 16 }}>
+            <Input
+              allowClear
+              placeholder="搜索名称 / 编码"
+              value={inputValue}
+              onChange={handleInputChange}
+              onPressEnter={() => {
+                if (debounceTimer.current) clearTimeout(debounceTimer.current)
+                setKeyword(inputValue.trim())
+              }}
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              style={{ width: 260 }}
+            />
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={() => {
+                if (debounceTimer.current) clearTimeout(debounceTimer.current)
+                setKeyword(inputValue.trim())
+              }}
+            >
+              搜索
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={handleReset}>
+              重置
+            </Button>
+          </Space>
+
+          <ProTable<MenuDto>
+            rowKey="id"
+            size="middle"
+            columns={columns}
+            dataSource={filteredMenus}
+            loading={isLoading}
+            search={false}
+            options={false}
+            headerTitle="菜单列表"
+            toolBarRender={() => [
+              <Button
+                key="add-root"
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={openAddRoot}
+              >
+                新增根菜单
+              </Button>,
+            ]}
+            pagination={false}
+            onRow={(record) => ({
+              style: !record.isVisible ? { opacity: 0.55 } : undefined,
+            })}
+            locale={{ emptyText: '暂无菜单数据，点击上方「新增根菜单」' }}
+          />
+        </div>
+      </div>
 
       <MenuDrawer
         open={menuDrawerOpen}
