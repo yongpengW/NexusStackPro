@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import {
-  Table,
   Button,
   Input,
   Tag,
@@ -10,7 +9,7 @@ import {
   Tree,
   Card,
 } from 'antd'
-import type { TableColumnsType, MenuProps } from 'antd'
+import type { MenuProps } from 'antd'
 import type { DataNode, TreeProps } from 'antd/es/tree'
 import {
   PlusOutlined,
@@ -21,7 +20,8 @@ import {
   ExpandAltOutlined,
   ShrinkOutlined,
 } from '@ant-design/icons'
-import { PageContainer } from '@ant-design/pro-components'
+import { PageContainer, ProTable } from '@ant-design/pro-components'
+import type { ProColumns } from '@ant-design/pro-components'
 import { RegionLevel, RegionLevelLabels } from '@/services/region'
 import type { RegionTreeDto, RegionDto } from '@/services/region'
 import { useRegion } from './useRegion'
@@ -225,14 +225,14 @@ export default function RegionPage() {
   const closeDrawer = () => setDrawerOpen(false)
 
   // ── 列定义 ──────────────────────────────────────────────────────────────
-  const columns: TableColumnsType<RegionDto> = [
+  const columns: ProColumns<RegionDto>[] = [
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string, record) => (
+      render: (_, record) => (
         <span style={!record.isEnable ? { opacity: 0.45 } : undefined}>
-          {highlight(text, keyword)}
+          {highlight(record.name, keyword)}
         </span>
       ),
     },
@@ -240,20 +240,20 @@ export default function RegionPage() {
       title: '简称',
       dataIndex: 'shortName',
       key: 'shortName',
-      render: (text: string) => highlight(text, keyword) || '—',
+      render: (_, record) => highlight(record.shortName, keyword) || '—',
     },
     {
       title: 'Code',
       dataIndex: 'code',
       key: 'code',
-      render: (text: string) => highlight(text, keyword),
+      render: (_, record) => highlight(record.code, keyword),
     },
     {
       title: '层级',
       dataIndex: 'level',
       key: 'level',
       width: 90,
-      render: (level: number) => RegionLevelLabels[level as RegionLevel] ?? '—',
+      render: (_, record) => RegionLevelLabels[record.level as RegionLevel] ?? '—',
     },
     {
       title: '排序',
@@ -266,9 +266,9 @@ export default function RegionPage() {
       dataIndex: 'isEnable',
       key: 'isEnable',
       width: 80,
-      render: (isEnable: boolean) => (
-        <Tag color={isEnable ? 'success' : 'default'}>
-          {isEnable ? '启用' : '禁用'}
+      render: (_, record) => (
+        <Tag color={record.isEnable ? 'success' : 'default'}>
+          {record.isEnable ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -353,14 +353,7 @@ export default function RegionPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <PageContainer
-      title="区域管理"
-      extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAddRoot}>
-          新增根节点
-        </Button>
-      }
-    >
+    <PageContainer title="区域管理">
       <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
         {/* 左侧层级树 */}
         <div style={{ width: 260, minWidth: 220 }}>
@@ -483,12 +476,25 @@ export default function RegionPage() {
             </Button>
           </Space>
 
-          <Table<RegionDto>
+          <ProTable<RegionDto>
             rowKey="id"
             size="middle"
             columns={columns}
             dataSource={pagedData as RegionDto[]}
             loading={isLoading}
+            search={false}
+            options={false}
+            headerTitle="区域列表"
+            toolBarRender={() => [
+              <Button
+                key="add-root"
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={openAddRoot}
+              >
+                新增根节点
+              </Button>,
+            ]}
             pagination={{
               current: page,
               pageSize,
@@ -506,7 +512,7 @@ export default function RegionPage() {
             locale={{
               emptyText: keyword
                 ? '未找到匹配的区域，请更换关键词'
-                : '暂无区域数据，点击右上角\"新增根节点\"',
+                : '暂无区域数据，点击上方「新增根节点」',
             }}
           />
         </div>
