@@ -14,11 +14,12 @@ import {
   BellOutlined,
   SafetyOutlined,
 } from '@ant-design/icons'
+import { UserApi } from '@/services/user'
 import React, { useState } from 'react'
 
 const menuItems = [
   { key: 'profile', icon: <UserOutlined />, label: '基本资料' },
-  { key: 'security', icon: <LockOutlined />, label: '安全设置' },
+  { key: 'security', icon: <LockOutlined />, label: '修改密码' },
   { key: 'notify', icon: <BellOutlined />, label: '消息通知' },
   { key: 'binding', icon: <SafetyOutlined />, label: '账号绑定' },
 ]
@@ -136,10 +137,23 @@ const AccountSettingsPage: React.FC = () => {
           )}
 
           {activeKey === 'security' && (
-            <ProForm
-              onFinish={async () => {
-                await new Promise((r) => setTimeout(r, 600))
-                message.success('密码修改成功！')
+            <ProForm<{
+              oldPassword: string
+              newPassword: string
+              confirmPassword: string
+            }>
+              onFinish={async ({ oldPassword, newPassword, confirmPassword }) => {
+                if (newPassword !== confirmPassword) {
+                  message.error('两次输入的密码不一致')
+                  return false
+                }
+                try {
+                  await UserApi.changePassword({ oldPassword, newPassword, confirmPassword })
+                  message.success('密码修改成功！')
+                  return true
+                } catch (error: any) {
+                  return false
+                }
               }}
               submitter={{ searchConfig: { submitText: '确认修改' } }}
             >
@@ -153,13 +167,26 @@ const AccountSettingsPage: React.FC = () => {
                 name="newPassword"
                 label="新密码"
                 width="md"
-                rules={[{ required: true, message: '请输入新密码' }, { min: 8, message: '密码至少 8 位' }]}
+                rules={[
+                  { required: true, message: '请输入新密码' },
+                  { min: 6, message: '密码至少 6 位' },
+                ]}
               />
               <ProFormText.Password
                 name="confirmPassword"
                 label="确认新密码"
                 width="md"
-                rules={[{ required: true, message: '请确认新密码' }]}
+                rules={[
+                  { required: true, message: '请确认新密码' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('newPassword') === value) {
+                        return Promise.resolve()
+                      }
+                      return Promise.reject(new Error('两次输入的密码不一致'))
+                    },
+                  }),
+                ]}
               />
             </ProForm>
           )}

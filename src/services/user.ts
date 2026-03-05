@@ -66,6 +66,12 @@ export interface UserQueryParams {
   isEnable?: boolean
 }
 
+export interface ChangePasswordDto {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
 // ─── API ─────────────────────────────────────────────────────────────────────
 
 export const UserApi = {
@@ -106,5 +112,9 @@ export const UserApi = {
   /** PUT /api/User/reset/{id} — 重置密码 */
   resetPassword: (id: number) =>
     http.put<void>(`/User/reset/${id}`, {}),
+
+  /** PUT /api/User/me/password — 当前用户修改自己的密码 */
+  changePassword: (data: ChangePasswordDto) =>
+    http.put<void>('/User/me/password', data),
 }
 
