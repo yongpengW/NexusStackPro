@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { App } from 'antd'
-import { RoleApi, PlatformType, DataRange } from '@/services/role'
+import { RoleApi, PlatformType, DataRange, MenuType } from '@/services/role'
 import type { RoleDto } from '@/services/role'
 import { PermissionApi } from '@/services/permission'
 import type { PermissionDto, ChangeRolePermissionDto } from '@/services/permission'
@@ -55,12 +55,13 @@ export interface UsePermissionResult extends PermissionPageState {
 
 // ─── 工具函数 ──────────────────────────────────────────────────────────────────
 
-/** 收集所有 hasPermission=true 的节点，返回 menuId 列表 */
+/** 收集所有 hasPermission=true 的“实际权限点”（Menu / Operation），返回 menuId 列表 */
 function collectCheckedIds(list: PermissionDto[]): number[] {
   const ids: number[] = []
   const walk = (items: PermissionDto[]) => {
     for (const p of items) {
-      if (p.hasPermission) ids.push(p.menuId)
+      const isLeafNode = p.menuType === MenuType.Menu || p.menuType === MenuType.Operation
+      if (p.hasPermission && isLeafNode) ids.push(p.menuId)
       if (p.children?.length) walk(p.children)
       if (p.operations?.length) walk(p.operations)
     }
@@ -69,12 +70,15 @@ function collectCheckedIds(list: PermissionDto[]): number[] {
   return ids
 }
 
-/** 收集所有 hasPermission=true 的节点，返回 menuId → DataRange 映射 */
+/** 收集所有 hasPermission=true 的“实际权限点”（Menu / Operation），返回 menuId → DataRange 映射 */
 function collectCheckedDataRanges(list: PermissionDto[]): Record<number, DataRange> {
   const map: Record<number, DataRange> = {}
   const walk = (items: PermissionDto[]) => {
     for (const p of items) {
-      if (p.hasPermission) map[p.menuId] = p.dataRange ?? DataRange.All
+      const isLeafNode = p.menuType === MenuType.Menu || p.menuType === MenuType.Operation
+      if (p.hasPermission && isLeafNode) {
+        map[p.menuId] = p.dataRange ?? DataRange.All
+      }
       if (p.children?.length) walk(p.children)
       if (p.operations?.length) walk(p.operations)
     }
