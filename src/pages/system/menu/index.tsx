@@ -376,7 +376,7 @@ export default function MenuPage() {
                 const hasChildren = !!menu.children?.length
                 const isOperation = menu.type === MenuType.Operation
 
-                const menuItems: MenuProps['items'] = [
+                const menuItems = [
                   !isOperation && {
                     key: 'addChild',
                     label: '新增子项',
@@ -414,7 +414,7 @@ export default function MenuPage() {
                       }
                     },
                   },
-                ].filter(Boolean)
+                ].filter(Boolean) as MenuProps['items']
 
                 return (
                   <Dropdown menu={{ items: menuItems }} trigger={['contextMenu']}>

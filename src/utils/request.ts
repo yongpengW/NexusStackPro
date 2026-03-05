@@ -157,6 +157,23 @@ function handleGlobalError(code: number, message: string): void {
   }
 }
 
+// ─── 解析响应体 ─────────────────────────────────────────────────────────────
+
+/**
+ * 从 Response 解析 JSON 体。后端可能返回 401 且 body 为空，此时解析会抛错，本函数对 401 返回 null 便于上层统一走 401 流程。
+ */
+async function parseResponseBody<T>(response: Response): Promise<T | null> {
+  try {
+    const text = await response.text()
+    return text ? (JSON.parse(text) as T) : null
+  } catch {
+    if (response.status === 401) {
+      return null
+    }
+    throw new ApiError(response.status, `无法解析响应内容 (HTTP ${response.status})`)
+  }
+}
+
 // ─── 请求头 ───────────────────────────────────────────────────────────────────
 
 function getAuthHeaders(): Record<string, string> {
@@ -194,13 +211,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     return undefined as T
   }
 
-  // 解析响应体
-  let body: RequestResultModel<T>
-  try {
-    body = await response.json()
-  } catch {
-    throw new ApiError(response.status, `无法解析响应内容 (HTTP ${response.status})`)
-  }
+  let body = await parseResponseBody<RequestResultModel<T>>(response)
 
   // ─── 401：先尝试刷新 token，成功后重试原请求 ───────────────────────────────
   const is401 =
@@ -221,26 +232,32 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       // 用新 token 重放原请求
       const retryResponse = await fetch(url, { ...options, headers: buildHeaders(newToken) })
       if (retryResponse.status === 204) return undefined as T
-      let retryBody: RequestResultModel<T>
-      try {
-        retryBody = await retryResponse.json()
-      } catch {
-        throw new ApiError(retryResponse.status, `无法解析响应内容 (HTTP ${retryResponse.status})`)
-      }
-      // 重试后仍 401 → 强制登出（新 token 立刻失效，属于异常情况）
-      if (retryBody.code === 401 || retryResponse.status === 401) {
+      const retryBody = await parseResponseBody<RequestResultModel<T>>(retryResponse)
+      if (retryBody === null && retryResponse.status === 401) {
         doLogout()
         throw new ApiError(401, '登录已过期')
       }
-      if (!retryBody.success || retryBody.code !== 200) {
-        handleGlobalError(retryBody.code, retryBody.message)
-        throw new ApiError(retryBody.code, retryBody.message)
+      // 重试后仍 401 → 强制登出（新 token 立刻失效，属于异常情况）
+      if (retryResponse.status === 401 || (retryBody && retryBody.code === 401)) {
+        doLogout()
+        throw new ApiError(401, '登录已过期')
+      }
+      if (!retryBody || !retryBody.success || retryBody.code !== 200) {
+        const code = retryBody?.code ?? retryResponse.status
+        const msg = retryBody?.message ?? `HTTP ${retryResponse.status}`
+        handleGlobalError(code, msg)
+        throw new ApiError(code, msg)
       }
       return retryBody.data
     } catch (err) {
       if (err instanceof ApiError) throw err
       throw new ApiError(0, '网络连接失败')
     }
+  }
+
+  // 401 且 body 为空时上面已处理，若仍到此处则防御性登出
+  if (body === null) {
+    throw new ApiError(401, '登录已过期')
   }
 
   // HTTP 层非 200（如 nginx/网关层返回的错误，绕过了业务层）
@@ -306,12 +323,7 @@ export async function fetchPagedData<T>(
     throw new ApiError(0, '网络连接失败')
   }
 
-  let body: RequestPagedResultModel<T>
-  try {
-    body = await response.json()
-  } catch {
-    throw new ApiError(response.status, `无法解析响应内容 (HTTP ${response.status})`)
-  }
+  let body = await parseResponseBody<RequestPagedResultModel<T>>(response)
 
   // 401 → 尝试刷新 token
   const is401 = response.status === 401 || (body && !body.success && body.code === 401)
@@ -319,16 +331,27 @@ export async function fetchPagedData<T>(
     try {
       const newToken = await tryRefreshToken()
       const retryResponse = await makeRequest(newToken)
-      body = await retryResponse.json()
+      body = await parseResponseBody<RequestPagedResultModel<T>>(retryResponse)
+      if (body === null && retryResponse.status === 401) {
+        doLogout()
+        throw new ApiError(401, '登录已过期')
+      }
+      // 重试后仍 401 → 强制登出并跳转登录页（与 request() 行为一致）
+      if (retryResponse.status === 401 || (body && !body.success && body.code === 401)) {
+        doLogout()
+        throw new ApiError(401, '登录已过期')
+      }
     } catch (err) {
       if (err instanceof ApiError) throw err
       throw new ApiError(0, '网络连接失败')
     }
   }
 
-  if (!body.success || body.code !== 200) {
-    handleGlobalError(body.code, body.message)
-    throw new ApiError(body.code, body.message)
+  if (body === null || !body.success || body.code !== 200) {
+    const code = body?.code ?? response.status
+    const msg = body?.message ?? `HTTP ${response.status}`
+    handleGlobalError(code, msg)
+    throw new ApiError(code, msg)
   }
 
   return { items: body.data, total: (body as RequestPagedResultModel<T>).total ?? 0 }
