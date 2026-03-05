@@ -335,8 +335,6 @@ interface ChangeRolePermissionDto {
 |---|---|
 | 页面初始化 / 搜索 / 切换 Tab | 整个表格区域 spin |
 | 打开编辑 Drawer | Drawer 内 spin（等待详情接口） |
-| 打开权限配置 Drawer | Drawer 内树形区域 spin |
-| 提交编辑 / 保存权限 | 对应 Drawer 提交按钮 loading |
 | 启禁用 / 删除 | 对应行操作按钮 loading |
 
 ### 7.2 消息反馈
@@ -348,7 +346,7 @@ interface ChangeRolePermissionDto {
 | 启用 | `message.success('已启用')` | `message.error(...)` |
 | 禁用 | `message.success('已禁用')` | `message.error(服务端原因，如"该角色正在使用中")` |
 | 删除 | `message.success('删除成功')` | `message.error(服务端原因)` |
-| 保存权限 | `message.success('权限配置保存成功')` | `message.error(...)` |
+| 保存权限（在权限管理页） | `message.success('权限配置保存成功')` | `message.error(...)` |
 
 ---
 
@@ -380,8 +378,7 @@ interface ChangeRolePermissionDto {
 src/pages/system/role/
 ├── index.tsx              # 页面主文件（分页表格 + 搜索栏 + 平台 Tab）
 ├── RoleDrawer.tsx         # 新增/编辑 Drawer
-├── PermissionDrawer.tsx   # 权限配置 Drawer（菜单树勾选）
-└── useRole.ts             # 数据逻辑 Hook
+└── useRole.ts             # 数据逻辑 Hook（列表查询、增删改等）
 
 src/services/role.ts       # Role 相关 API 封装
 ```
@@ -420,12 +417,6 @@ export const RoleApi = {
 
   disable: (id: number) =>
     http.put<void>(`/Role/disable/${id}`, {}),
-
-  getPermission: (roleId: number, platformType: number) =>
-    http.get<PermissionDto[]>(buildUrl('/Role/permission', { roleId, platformType })),
-
-  savePermission: (roleId: number, data: ChangeRolePermissionDto) =>
-    http.post<void>(`/Role/permission/${roleId}`, data),
 }
 ```
 

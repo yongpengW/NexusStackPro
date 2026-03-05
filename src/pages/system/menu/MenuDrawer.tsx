@@ -23,7 +23,6 @@ import {
   PLATFORM_OPTIONS,
   type CreateMenuDto,
   type MenuTreeDto,
-  type MenuDto,
 } from '@/services/menu'
 import { MENU_QUERY_KEYS } from './useMenu'
 

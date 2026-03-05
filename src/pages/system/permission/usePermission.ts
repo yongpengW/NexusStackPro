@@ -97,12 +97,19 @@ function collectAllMenuIds(list: PermissionDto[]): number[] {
   return ids
 }
 
+interface UsePermissionOptions {
+  platformType?: PlatformType
+  roleId?: number
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function usePermission(): UsePermissionResult {
+export function usePermission(options: UsePermissionOptions = {}): UsePermissionResult {
   const { message } = App.useApp()
 
-  const [platformType, setPlatformType] = useState<PlatformType>(PlatformType.Admin)
+  const [platformType, setPlatformType] = useState<PlatformType>(
+    options.platformType ?? PlatformType.Admin,
+  )
   const [roleList, setRoleList] = useState<RoleDto[]>([])
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null)
 
@@ -151,16 +158,25 @@ export function usePermission(): UsePermissionResult {
     }
   }
 
-  const loadRoles = async (platform: PlatformType) => {
+  const loadRoles = async (platform: PlatformType, preferredRoleId?: number) => {
     setLoadingRoles(true)
     try {
-      const res = await RoleApi.getList(platform, { page: 1, limit: 1000, isEnable: true })
+      // 权限管理左侧角色列表：始终加载全部启用角色（不按平台分页），
+      // 平台 Tab 仅影响右侧权限树加载视角。
+      const res = await RoleApi.getList(PlatformType.All, { page: 1, limit: 1000, isEnable: true })
       const list = res.items ?? []
       setRoleList(list)
 
       if (!list.length) {
         setSelectedRoleId(null)
         resetPermissionState()
+        return
+      }
+
+      // 若从角色管理页传入了首选角色，并且该角色在当前平台可见，则直接选中该角色
+      if (preferredRoleId && list.some((r) => r.id === preferredRoleId)) {
+        setSelectedRoleId(preferredRoleId)
+        await loadPermissions(preferredRoleId, platform)
         return
       }
 
@@ -179,7 +195,7 @@ export function usePermission(): UsePermissionResult {
   }
 
   useEffect(() => {
-    loadRoles(platformType)
+    loadRoles(platformType, options.roleId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

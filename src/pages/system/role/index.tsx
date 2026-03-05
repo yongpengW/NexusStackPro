@@ -4,11 +4,11 @@ import type { MenuProps } from 'antd'
 import { PlusOutlined, DownOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { PageContainer, ProTable } from '@ant-design/pro-components'
 import type { ActionType, ProColumns } from '@ant-design/pro-components'
+import { useNavigate } from 'react-router-dom'
 import { RoleApi, PLATFORM_META, PLATFORM_OPTIONS, parsePlatformFlags, PlatformType } from '@/services/role'
 import type { RoleDto } from '@/services/role'
 import { useRole } from './useRole'
 import { RoleDrawer } from './RoleDrawer'
-import { PermissionDrawer } from './PermissionDrawer'
 
 // ─── 平台筛选 Tab 配置 ────────────────────────────────────────────────────────
 
@@ -24,6 +24,7 @@ const PLATFORM_TABS = [
 
 export default function RolePage() {
   const actionRef = useRef<ActionType | null>(null)
+  const navigate = useNavigate()
 
   // ─── 平台筛选（用 ref 保证 request 内始终读到最新值，避免切换 Tab 时闭包陈旧） ─
   const [platformType, setPlatformType] = useState<number>(PlatformType.All)
@@ -45,12 +46,21 @@ export default function RolePage() {
   // ─── Drawer 状态 ─────────────────────────────────────────────────────
   const [roleDrawerOpen,  setRoleDrawerOpen]  = useState(false)
   const [editId,          setEditId]          = useState<number | null>(null)
-  const [permDrawerOpen,  setPermDrawerOpen]  = useState(false)
-  const [permRole,        setPermRole]        = useState<RoleDto | null>(null)
 
   const openAddDrawer  = () => { setEditId(null); setRoleDrawerOpen(true) }
   const openEditDrawer = (id: number) => { setEditId(id); setRoleDrawerOpen(true) }
-  const openPermDrawer = (record: RoleDto) => { setPermRole(record); setPermDrawerOpen(true) }
+
+  const openPermissionPage = (record: RoleDto) => {
+    // 当平台筛选为“全部”时，从角色自身平台 Flags 中选择一个作为默认平台
+    let targetPlatform: PlatformType
+    if (platformTypeRef.current === PlatformType.All) {
+      const platforms = parsePlatformFlags(record.platforms)
+      targetPlatform = (platforms[0] as PlatformType | undefined) ?? PlatformType.Admin
+    } else {
+      targetPlatform = platformTypeRef.current as PlatformType
+    }
+    navigate(`/system/permission?roleId=${record.id}&platform=${targetPlatform}`)
+  }
 
   // ─── 列定义 ───────────────────────────────────────────────────────────
 
@@ -168,7 +178,7 @@ export default function RolePage() {
 
         return (
           <Space size={0}>
-            <Button type="link" size="small" onClick={() => openPermDrawer(record)}>
+            <Button type="link" size="small" onClick={() => openPermissionPage(record)}>
               配置权限
             </Button>
             <Button type="link" size="small" onClick={() => openEditDrawer(record.id)}>
@@ -254,16 +264,6 @@ export default function RolePage() {
         }}
         onSuccess={() => {
           setRoleDrawerOpen(false)
-          actionRef.current?.reload()
-        }}
-      />
-
-      {/* 权限配置 Drawer */}
-      <PermissionDrawer
-        open={permDrawerOpen}
-        role={permRole}
-        onClose={() => {
-          setPermDrawerOpen(false)
           actionRef.current?.reload()
         }}
       />

@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  Alert,
-  Button,
-  Empty,
-  Popconfirm,
-  Select,
-  Space,
-  Spin,
-  Tag,
-  Tree,
-} from 'antd'
+import { Alert, Button, Drawer, Empty, Popconfirm, Select, Space, Spin, Tag, Tree } from 'antd'
 import type { DataNode } from 'antd/es/tree'
 import { ExpandAltOutlined, ShrinkOutlined, CheckOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { PermissionDto } from '@/services/role'
@@ -99,12 +89,16 @@ export function PermissionTree({
 }: PermissionTreeProps) {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
   const [loadingApiMenuId, setLoadingApiMenuId] = useState<number | null>(null)
-  const [apiExpandedMenuIds, setApiExpandedMenuIds] = useState<number[]>([])
+  const [apiDrawerMenu, setApiDrawerMenu] = useState<{ menuId: number; menuName: string } | null>(
+    null,
+  )
+  const [apiDrawerOpen, setApiDrawerOpen] = useState(false)
 
   useEffect(() => {
-    setApiExpandedMenuIds([])
     setExpandedKeys([])
     setLoadingApiMenuId(null)
+    setApiDrawerMenu(null)
+    setApiDrawerOpen(false)
   }, [permissionTree])
 
   const treeNodes: PermissionTreeNode[] = useMemo(
@@ -132,18 +126,14 @@ export function PermissionTree({
     onCheckChange(checkedArr as number[], (info.halfCheckedKeys ?? []) as number[])
   }
 
-  const toggleApiExpand = async (menuId: number) => {
-    const isExpanded = apiExpandedMenuIds.includes(menuId)
-    if (isExpanded) {
-      setApiExpandedMenuIds((prev) => prev.filter((id) => id !== menuId))
-      return
-    }
+  const openApiDrawer = async (menuId: number, menuName: string) => {
+    setApiDrawerMenu({ menuId, menuName })
+    setApiDrawerOpen(true)
     if (!expandedApiBindings[menuId] && loadingApiMenuId !== menuId) {
       setLoadingApiMenuId(menuId)
       await loadApiBindings(menuId)
       setLoadingApiMenuId(null)
     }
-    setApiExpandedMenuIds((prev) => [...prev, menuId])
   }
 
   const renderApiBindings = (menuId: number) => {
@@ -192,9 +182,6 @@ export function PermissionTree({
 
     const isOperation = origin.menuType === MenuType.Operation
     const isMenu = origin.menuType === MenuType.Menu
-    const isApiExpanded = apiExpandedMenuIds.includes(origin.menuId)
-    const isLoadingThis = loadingApiMenuId === origin.menuId
-    const showPanel = isOperation && (isApiExpanded || isLoadingThis)
     const isChecked = checkedKeys.includes(origin.menuId)
     // DataRange Select 仅对 Menu / Operation 节点、在勾选且非系统角色时显示
     const showDataRange = (isMenu || isOperation) && isChecked && !isSystemRole
@@ -222,27 +209,14 @@ export function PermissionTree({
                 style={{ paddingInline: 4 }}
                 onClick={(e) => {
                   e.stopPropagation()
-                  void toggleApiExpand(origin.menuId)
+                  void openApiDrawer(origin.menuId, origin.menuName)
                 }}
               >
-                {isApiExpanded ? '收起 API 绑定' : '查看 API 绑定'}
+                查看 API 绑定
               </Button>
             )}
           </Space>
         </Space>
-        {showPanel && (
-          <div
-            style={{
-              marginTop: 2,
-              borderRadius: 4,
-              border: '1px solid var(--ant-color-border-secondary)',
-              background: 'var(--ant-color-bg-container)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {renderApiBindings(origin.menuId)}
-          </div>
-        )}
       </div>
     )
   // useCallback deps：覆盖 renderNodeTitle 直接读取的响应式值。
@@ -250,8 +224,7 @@ export function PermissionTree({
   // 但它们的所有依赖项（apiExpandedMenuIds、expandedApiBindings、loadingApiMenuId）
   // 都已包含在此列表中，故闭包始终与最新状态一致，eslint-disable 屏蔽此保守警告。
   // loadApiBindings 是稳定 prop（调用方应保证引用稳定），不加入 deps 以避免冗余重建。
-  }, [apiExpandedMenuIds, loadingApiMenuId, checkedKeys, dataRangeMap, isSystemRole,
-      expandedApiBindings, onDataRangeChange])
+  }, [loadingApiMenuId, checkedKeys, dataRangeMap, isSystemRole, expandedApiBindings, onDataRangeChange])
 
   if (!permissionTree.length && !loading) {
     return (
@@ -350,6 +323,19 @@ export function PermissionTree({
           />
         </Spin>
       </div>
+
+      {/* 查看 API 绑定抽屉，仅做只读查看，不修改绑定关系 */}
+      <Drawer
+        title={apiDrawerMenu ? `API 绑定 - ${apiDrawerMenu.menuName}` : 'API 绑定'}
+        width={520}
+        open={apiDrawerOpen && !!apiDrawerMenu}
+        destroyOnClose
+        onClose={() => {
+          setApiDrawerOpen(false)
+        }}
+      >
+        {apiDrawerMenu && renderApiBindings(apiDrawerMenu.menuId)}
+      </Drawer>
     </div>
   )
 }
