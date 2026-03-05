@@ -1,4 +1,4 @@
-﻿import {
+import {
   ClusterOutlined,
   ContactsOutlined,
   HomeOutlined,
@@ -21,8 +21,10 @@ import {
   Tag,
   Typography,
 } from 'antd'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '@/store/useAppStore'
+import { UserApi, type CurrentUserDto, Gender } from '@/services/user'
+import { formatDateTime } from '@/utils/dateUtils'
 
 const { Paragraph } = Typography
 
@@ -205,8 +207,29 @@ const AccountCenterPage: React.FC = () => {
   const [tabKey, setTabKey] = useState<TabKey>('articles')
   const userInfo = useAppStore((s) => s.userInfo)
 
-  const avatar = userInfo?.avatar || 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
-  const name = userInfo?.userName || '吴彦祖'
+  const [me, setMe] = useState<CurrentUserDto | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await UserApi.getMe()
+        if (mounted) setMe(data)
+      } catch {
+        // 静默失败，保持占位内容
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const avatar =
+    me?.avatar || userInfo?.avatar || 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
+  const name = me?.realName || me?.nickName || userInfo?.userName || '未登录用户'
+
+  const genderLabel =
+    me?.gender === Gender.Male ? '男' : me?.gender === Gender.Female ? '女' : me ? '未知' : '—'
 
   const renderContent = () => {
     if (tabKey === 'articles') return <ArticlesTab />
@@ -223,20 +246,29 @@ const AccountCenterPage: React.FC = () => {
             <div style={{ textAlign: 'center' }}>
               <Avatar size={104} src={avatar} style={{ marginBottom: 12 }} />
               <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>{name}</div>
-              <div style={{ color: 'rgba(0,0,0,0.45)', marginBottom: 16 }}>海纳百川，有容乃大</div>
+              <div style={{ color: 'rgba(0,0,0,0.45)', marginBottom: 16 }}>
+                {me?.nickName || '海纳百川，有容乃大'}
+              </div>
             </div>
             <div style={{ marginBottom: 16 }}>
               <p style={{ marginBottom: 8 }}>
                 <ContactsOutlined style={{ marginRight: 8 }} />
-                交互专家
+                真实姓名：{me?.realName || '—'}
               </p>
               <p style={{ marginBottom: 8 }}>
                 <ClusterOutlined style={{ marginRight: 8 }} />
-                蚂蚁金服－某某某事业群
+                昵称：{me?.nickName || '—'}
               </p>
               <p style={{ marginBottom: 0 }}>
                 <HomeOutlined style={{ marginRight: 8 }} />
-                浙江省 杭州市
+                性别：{genderLabel}
+              </p>
+              <p style={{ marginBottom: 0, marginTop: 8 }}>
+                <LinkOutlined style={{ marginRight: 8 }} />
+                邮箱：{me?.email || '—'}
+              </p>
+              <p style={{ marginBottom: 0, marginTop: 8, fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+                上次登录时间：{formatDateTime(me?.lastLoginTime)}
               </p>
             </div>
             <Divider dashed />

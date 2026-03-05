@@ -159,14 +159,36 @@ export function PermissionTree({
     return (
       <Space direction="vertical" size={4} style={{ padding: '6px 12px', width: '100%' }}>
         {flat.map((api) => (
-          <Space key={api.id} size={8} style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <Space
+            key={api.id}
+            size={8}
+            style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+          >
             <Space size={6}>
-              <Tag color={api.isChecked ? 'success' : 'default'} style={{ minWidth: 56, textAlign: 'center' }}>
+              <Tag
+                color={api.isChecked ? 'success' : 'default'}
+                style={{ minWidth: 56, textAlign: 'center' }}
+              >
                 {api.isChecked ? '已绑定' : '未绑定'}
               </Tag>
-              <span style={{ fontFamily: 'monospace' }}>{api.routePattern}</span>
+              <Tag
+                color="blue"
+                style={{
+                  fontFamily: 'monospace',
+                  marginInlineEnd: 0,
+                }}
+              >
+                {api.routePattern}
+              </Tag>
             </Space>
-            <span style={{ color: 'var(--ant-color-text-tertiary)' }}>{api.name}</span>
+            <Tag
+              color="orange"
+              style={{
+                marginInlineEnd: 0,
+              }}
+            >
+              {api.name}
+            </Tag>
           </Space>
         ))}
       </Space>
@@ -327,9 +349,8 @@ export function PermissionTree({
       {/* 查看 API 绑定抽屉，仅做只读查看，不修改绑定关系 */}
       <Drawer
         title={apiDrawerMenu ? `API 绑定 - ${apiDrawerMenu.menuName}` : 'API 绑定'}
-        width={520}
+        width={640}
         open={apiDrawerOpen && !!apiDrawerMenu}
-        destroyOnClose
         onClose={() => {
           setApiDrawerOpen(false)
         }}
