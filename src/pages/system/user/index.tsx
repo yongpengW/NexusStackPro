@@ -129,7 +129,7 @@ export default function UserPage() {
       key: 'lastLoginTime',
       width: 180,
       search: false,
-      render: (v: string) => (v ? new Date(v).toLocaleString() : '—'),
+      render: (_, record) => (record.lastLoginTime ? new Date(record.lastLoginTime).toLocaleString() : '—'),
     },
     {
       title: '状态',
@@ -196,7 +196,7 @@ export default function UserPage() {
                 ) : (
                   '禁用'
                 ),
-                disabled: isSelf,
+                disabled: !!isSelf,
                 onClick: isSelf ? undefined : () => handleDisable(record),
               }
             : {
@@ -208,7 +208,7 @@ export default function UserPage() {
                 ) : (
                   '启用'
                 ),
-                disabled: isSelf,
+                disabled: !!isSelf,
                 onClick: isSelf ? undefined : () => handleEnable(record.id),
               },
           {
@@ -220,7 +220,7 @@ export default function UserPage() {
             ) : (
               '重置密码'
             ),
-            disabled: isSelf,
+            disabled: !!isSelf,
             onClick: isSelf ? undefined : () => handleResetPassword(record),
           },
           {
@@ -233,7 +233,7 @@ export default function UserPage() {
               '删除'
             ),
             danger: !isSelf,
-            disabled: isSelf,
+            disabled: !!isSelf,
             onClick: isSelf ? undefined : () => handleDelete(record),
           },
         ]

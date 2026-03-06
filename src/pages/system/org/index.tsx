@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { PageContainer } from '@ant-design/pro-components'
 import { Card, Input, Tag, Space, Spin, Empty } from 'antd'
 import {
-  ClusterOutlined,
   GlobalOutlined,
   EnvironmentOutlined,
   ApartmentOutlined,
@@ -133,7 +132,7 @@ const OrgPage: React.FC = () => {
       subTitle="基于区域树自动生成的组织架构视图"
     >
       <Card
-        bordered={false}
+        variant="borderless"
         styles={{
           body: {
             padding: 16,

@@ -23,7 +23,7 @@ export const AvatarName: React.FC = () => {
   return <span>{userInfo?.userName ?? ''}</span>
 }
 
-export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu, children }) => {
+export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu }) => {
   const navigate = useNavigate()
   const userInfo = useAppStore((s) => s.userInfo)
   const clearUserInfo = useAppStore((s) => s.logout)

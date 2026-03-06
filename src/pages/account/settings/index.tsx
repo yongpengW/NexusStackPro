@@ -65,7 +65,7 @@ const AccountSettingsPage: React.FC = () => {
   }, [meQuery.data])
 
   useEffect(() => {
-    // ProForm 的 initialValues 仅在首次挂载生效；异步拿到 me 后需要手动回填
+    // 异步拿到 me 或保存后 setMe(fresh) 时，同步到表单
     if (activeKey !== 'profile' || !me) return
     profileForm.setFieldsValue({
       userName: me.userName,
@@ -74,7 +74,6 @@ const AccountSettingsPage: React.FC = () => {
       mobile: me.mobile,
       email: me.email,
       gender: me.gender ?? Gender.Unknown,
-      // 后端可能返回 remark，但类型未显式声明时用兜底读取
       remark: (me as any)?.remark ?? undefined,
     })
   }, [activeKey, me, profileForm])
@@ -162,86 +161,88 @@ const AccountSettingsPage: React.FC = () => {
                   </div>
                 </div>
                 <Divider />
-                <ProForm<{
-                  userName: string
-                  realName?: string
-                  nickName?: string
-                  mobile: string
-                  email?: string
-                  gender?: Gender
-                  remark?: string
-                }>
-                  form={profileForm}
-                  onFinish={async (values) => {
-                    if (!me) return false
-                    const payload: CreateUserDto = {
+                {/* 仅在 me 就绪后渲染表单，使 initialValues 在挂载时即生效，避免 ProForm 的 async initialValues 警告 */}
+                {me ? (
+                  <ProForm<{
+                    userName: string
+                    realName?: string
+                    nickName?: string
+                    mobile: string
+                    email?: string
+                    gender?: Gender
+                    remark?: string
+                  }>
+                    key={me.id}
+                    form={profileForm}
+                    initialValues={{
                       userName: me.userName,
-                      realName: values.realName,
-                      nickName: values.nickName,
-                      mobile: values.mobile,
-                      email: values.email,
-                      gender: values.gender,
-                      remark: values.remark,
-                      isEnable: me.isEnable,
-                      userRoles: (me.userRoles ?? []).map((r) => ({ roleId: r.roleId })),
-                      departmentIds: (me.departments ?? []).map((d) => d.departmentId),
-                    }
-                    try {
-                      await updateMeMutation.mutateAsync(payload)
-                      // 更新成功后刷新展示区域（name / lastLogin 等）
-                      const fresh = await queryClient.fetchQuery({
-                        queryKey: ['user', 'me'],
-                        queryFn: () => UserApi.getMe(),
-                      })
-                      setMe(fresh)
-                      return true
-                    } catch {
-                      return false
-                    }
-                  }}
-                  submitter={{
-                    searchConfig: { submitText: '保存修改' },
-                    submitButtonProps: { loading: updateMeMutation.isPending, disabled: !me },
-                  }}
-                  initialValues={{
-                    userName: me?.userName,
-                    realName: me?.realName,
-                    nickName: me?.nickName,
-                    mobile: me?.mobile,
-                    email: me?.email,
-                    gender: me?.gender ?? Gender.Unknown,
-                    remark: undefined,
-                  }}
-                >
-                  <ProForm.Group>
-                    <ProFormText name="userName" label="账号" width="md" disabled />
-                    <ProFormText name="realName" label="真实姓名" width="md" />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      name="nickName"
-                      label="昵称"
-                      width="md"
-                      rules={[{ required: true, message: '请输入昵称' }]}
-                    />
-                    <ProFormSelect
-                      name="gender"
-                      label="性别"
-                      width="md"
-                      options={genderOptions}
-                    />
-                  </ProForm.Group>
-                  <ProForm.Group>
-                    <ProFormText
-                      name="mobile"
-                      label="手机号"
-                      width="md"
-                      rules={[{ required: true, message: '请输入手机号' }]}
-                    />
-                    <ProFormText name="email" label="邮箱" width="md" />
-                  </ProForm.Group>
-                  <ProFormTextArea name="remark" label="个人简介" width="xl" />
-                </ProForm>
+                      realName: me.realName,
+                      nickName: me.nickName,
+                      mobile: me.mobile,
+                      email: me.email,
+                      gender: me.gender ?? Gender.Unknown,
+                      remark: (me as any)?.remark ?? undefined,
+                    }}
+                    onFinish={async (values) => {
+                      const payload: CreateUserDto = {
+                        userName: me.userName,
+                        realName: values.realName,
+                        nickName: values.nickName,
+                        mobile: values.mobile,
+                        email: values.email,
+                        gender: values.gender,
+                        remark: values.remark,
+                        isEnable: me.isEnable,
+                        userRoles: (me.userRoles ?? []).map((r) => ({ roleId: r.roleId })),
+                        departmentIds: (me.departments ?? []).map((d) => d.departmentId),
+                      }
+                      try {
+                        await updateMeMutation.mutateAsync(payload)
+                        const fresh = await queryClient.fetchQuery({
+                          queryKey: ['user', 'me'],
+                          queryFn: () => UserApi.getMe(),
+                        })
+                        setMe(fresh)
+                        return true
+                      } catch {
+                        return false
+                      }
+                    }}
+                    submitter={{
+                      searchConfig: { submitText: '保存修改' },
+                      submitButtonProps: { loading: updateMeMutation.isPending },
+                    }}
+                  >
+                    <ProForm.Group>
+                      <ProFormText name="userName" label="账号" width="md" disabled />
+                      <ProFormText name="realName" label="真实姓名" width="md" />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormText
+                        name="nickName"
+                        label="昵称"
+                        width="md"
+                        rules={[{ required: true, message: '请输入昵称' }]}
+                      />
+                      <ProFormSelect
+                        name="gender"
+                        label="性别"
+                        width="md"
+                        options={genderOptions}
+                      />
+                    </ProForm.Group>
+                    <ProForm.Group>
+                      <ProFormText
+                        name="mobile"
+                        label="手机号"
+                        width="md"
+                        rules={[{ required: true, message: '请输入手机号' }]}
+                      />
+                      <ProFormText name="email" label="邮箱" width="md" />
+                    </ProForm.Group>
+                    <ProFormTextArea name="remark" label="个人简介" width="xl" />
+                  </ProForm>
+                ) : null}
               </Spin>
             </>
           )}

@@ -5,7 +5,7 @@ import { PlusOutlined, DownOutlined, SafetyCertificateOutlined } from '@ant-desi
 import { PageContainer, ProTable } from '@ant-design/pro-components'
 import type { ActionType, ProColumns } from '@ant-design/pro-components'
 import { useNavigate } from 'react-router-dom'
-import { RoleApi, PLATFORM_META, PLATFORM_OPTIONS, parsePlatformFlags, PlatformType } from '@/services/role'
+import { RoleApi, PLATFORM_META, parsePlatformFlags, PlatformType } from '@/services/role'
 import type { RoleDto } from '@/services/role'
 import { useRole } from './useRole'
 import { RoleDrawer } from './RoleDrawer'
