@@ -49,7 +49,7 @@ const zhCN = {
 
   // 登录页
   'pages.login.title': 'NexusStack',
-  'pages.login.subTitle': '全球最具影响力的 Web 设计规范',
+  'pages.login.subTitle': '现代化开箱即用的企业级中台解决方案',
   'pages.login.accountLogin.tab': '账户密码登录',
   'pages.login.phoneLogin.tab': '手机号登录',
   'pages.login.accountLogin.errorMessage': '账户或密码错误',

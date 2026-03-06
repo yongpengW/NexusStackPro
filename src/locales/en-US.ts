@@ -49,7 +49,7 @@ const enUS = {
 
   // login
   'pages.login.title': 'NexusStack',
-  'pages.login.subTitle': 'The most influential Web design spec in the world',
+  'pages.login.subTitle': 'A modern, out-of-the-box enterprise-grade middle platform solution',
   'pages.login.accountLogin.tab': 'Account Login',
   'pages.login.phoneLogin.tab': 'Phone Login',
   'pages.login.accountLogin.errorMessage': 'Incorrect username or password',
