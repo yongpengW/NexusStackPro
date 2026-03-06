@@ -84,7 +84,11 @@ export function MenuDrawer({
   onSuccess,
 }: MenuDrawerProps) {
   const isEdit = editId != null
-  const [form] = Form.useForm<CreateMenuDto>()
+  type MenuFormValues = Omit<CreateMenuDto, 'parentId'> & {
+    /** Select value 使用 string，避免超大 ID 精度问题 */
+    parentId?: string | number | null
+  }
+  const [form] = Form.useForm<MenuFormValues>()
   const { message } = App.useApp()
   const queryClient = useQueryClient()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -108,7 +112,8 @@ export function MenuDrawer({
     if (isEdit && open && detail && detail.id === editId) {
       form.setFieldsValue({
         ...detail,
-        parentId: detail.parentId || undefined,
+        // Select option 的 value 统一用 string（含根节点 '0'），避免超大雪花 ID Number 精度丢失导致无法命中 option
+        parentId: String((detail as any)?.parentId ?? 0),
       })
     } else if (!isEdit && open) {
       const nextType = parentNode
@@ -117,7 +122,7 @@ export function MenuDrawer({
       form.setFieldsValue({
         name: undefined,
         code: undefined,
-        parentId: parentNode?.id ?? 0,
+        parentId: String((parentNode as any)?.id ?? 0),
         type: nextType,
         platformType: parentNode ? parentNode.platformType : platformType || undefined,
         url: undefined,
@@ -164,7 +169,10 @@ export function MenuDrawer({
       const values = await form.validateFields()
       const payload: CreateMenuDto = {
         ...values,
-        parentId: values.parentId === 0 || values.parentId == null ? undefined : values.parentId,
+        parentId:
+          values.parentId === '0' || values.parentId === 0 || values.parentId == null
+            ? undefined
+            : (values.parentId as any),
         order: values.order ?? 0,
         isVisible: values.isVisible ?? true,
         isExternalLink: values.isExternalLink ?? false,
@@ -182,7 +190,7 @@ export function MenuDrawer({
 
   const parentOptions = useMemo(() => {
     if (currentType === MenuType.Subsystem) {
-      return [{ label: '无（根节点）', value: 0 }]
+      return [{ label: '无（根节点）', value: '0' }]
     }
     const allowedParentType =
       currentType === MenuType.Directory ? MenuType.Subsystem
@@ -191,10 +199,14 @@ export function MenuDrawer({
     const list = collectIdsByType(treeData, allowedParentType)
     const excludeIds = isEdit && editId ? collectSelfAndDescendantIds(treeData, editId) : []
     const filtered = list.filter((o) => !excludeIds.includes(o.id))
-    return [{ label: '无（根节点）', value: 0 }, ...filtered.map((o) => ({ label: o.name, value: o.id }))]
+    return [
+      { label: '无（根节点）', value: '0' },
+      ...filtered.map((o) => ({ label: o.name, value: String(o.id) })),
+    ]
   }, [currentType, treeData, isEdit, editId])
 
-  const showUrl = currentType === MenuType.Menu
+  // 目录节点同样需要 url：用于生成左侧菜单 routes 的 path（作为分组路由节点）
+  const showUrl = currentType === MenuType.Menu || currentType === MenuType.Directory
   const showIsVisible = currentType !== MenuType.Operation
   const showIsExternalLink = currentType === MenuType.Menu
   const showParent = currentType !== MenuType.Subsystem
@@ -300,7 +312,8 @@ export function MenuDrawer({
               label="路由 URL"
               name="url"
               rules={[
-                { required: true, message: '菜单类型为「菜单」时，路由地址不能为空' },
+                { required: true, message: '菜单类型为「目录/菜单」时，路由地址不能为空' },
+                { pattern: /^\/.+/, message: '路由地址需以 / 开头，如 /system/user' },
                 { max: 1024 },
               ]}
             >

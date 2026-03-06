@@ -339,7 +339,7 @@ export default function MenuPage() {
           <Card
             title="菜单层级"
             size="small"
-            styles={{ body: { padding: 8, maxHeight: 520, overflow: 'auto' } }}
+            styles={{ body: { padding: 8, maxHeight: 720, overflow: 'auto' } }}
             extra={
               <Space size={4}>
                 <Button
