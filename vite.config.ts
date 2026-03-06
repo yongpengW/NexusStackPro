@@ -43,10 +43,8 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             // React 核心：极少变动，长期缓存
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            // Ant Design 图标：全量引入时体积大，单独拆包便于缓存
-            'vendor-antd-icons': ['@ant-design/icons'],
-            // Ant Design 组件库：与 Pro 拆开，便于单方升级时缓存不失效
-            'vendor-antd': ['antd'],
+            // Ant Design：antd 依赖 @ant-design/icons，合并到同一 chunk 避免图标代码重复打进多份
+            'vendor-antd': ['antd', '@ant-design/icons'],
             'vendor-antd-pro': ['@ant-design/pro-components'],
             // React Query：与 Devtools 拆开（生产构建下 Devtools 通常被 tree-shake）
             'vendor-query': ['@tanstack/react-query'],
