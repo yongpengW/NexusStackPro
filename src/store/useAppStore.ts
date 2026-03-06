@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { LoginResult } from '@/services/auth'
@@ -30,6 +31,8 @@ interface AppState {
 
   /** 当前用户的菜单树（根据平台过滤后） */
   menus: MenuTreeDto[]
+  /** 懒加载的 @ant-design/icons 模块，用于动态菜单图标 */
+  iconsModule: Record<string, ComponentType> | null
 
   setLoading: (loading: boolean) => void
   /** 设置是否自动登录 */
@@ -38,6 +41,8 @@ interface AppState {
   setLoginData: (result: LoginResult) => void
   /** 设置当前用户菜单树 */
   setMenus: (menus: MenuTreeDto[]) => void
+  /** 设置懒加载的 icons 模块（由 MainLayout 等触发 import 后写入） */
+  setIconsModule: (m: Record<string, ComponentType> | null) => void
   /** 登出：清空状态与 localStorage */
   logout: () => void
 }
@@ -66,6 +71,7 @@ export const useAppStore = create<AppState>()(
       token: initialRememberMe ? localStorage.getItem(TOKEN_KEY) : null,
       refreshToken: initialRememberMe ? localStorage.getItem(REFRESH_TOKEN_KEY) : null,
       menus: [],
+      iconsModule: null,
 
       setLoading: (loading) => set({ loading }, false, 'setLoading'),
 
@@ -111,6 +117,8 @@ export const useAppStore = create<AppState>()(
       },
 
       setMenus: (menus) => set({ menus }, false, 'setMenus'),
+
+      setIconsModule: (iconsModule) => set({ iconsModule }, false, 'setIconsModule'),
 
       logout: () => {
         localStorage.removeItem(TOKEN_KEY)

@@ -40,22 +40,21 @@ export default defineConfig(({ mode }) => {
       sourcemap: !isProd,
       rollupOptions: {
         output: {
-          manualChunks: {
-            // React 核心：极少变动，长期缓存
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            // Ant Design：antd 依赖 @ant-design/icons，合并到同一 chunk 避免图标代码重复打进多份
-            'vendor-antd': ['antd', '@ant-design/icons'],
-            'vendor-antd-pro': ['@ant-design/pro-components'],
-            // React Query：与 Devtools 拆开（生产构建下 Devtools 通常被 tree-shake）
-            'vendor-query': ['@tanstack/react-query'],
-            'vendor-query-devtools': ['@tanstack/react-query-devtools'],
-            // 国际化
-            'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
-            // 工具库
-            'vendor-utils': ['dayjs', 'zustand'],
-            // 按需/重量级库：单独 chunk，便于缓存与并行加载
-            'vendor-exceljs': ['exceljs'],
-            'vendor-org-chart': ['react-organizational-chart'],
+          // 使用函数形式：便于为懒加载的 @ant-design/icons 等指定稳定 chunk 名，利于长期缓存
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return
+            if (id.includes('@ant-design/icons')) return 'vendor-antd-icons'
+            if (id.includes('node_modules/react-dom')) return 'vendor-react'
+            if (id.includes('node_modules/react-router')) return 'vendor-react'
+            if (id.includes('node_modules/react/')) return 'vendor-react'
+            if (id.includes('node_modules/antd')) return 'vendor-antd'
+            if (id.includes('@ant-design/pro-components')) return 'vendor-antd-pro'
+            if (id.includes('@tanstack/react-query-devtools')) return 'vendor-query-devtools'
+            if (id.includes('@tanstack/react-query')) return 'vendor-query'
+            if (id.includes('i18next') || id.includes('react-i18next') || id.includes('i18next-browser-languagedetector')) return 'vendor-i18n'
+            if (id.includes('node_modules/dayjs') || id.includes('node_modules/zustand')) return 'vendor-utils'
+            if (id.includes('node_modules/exceljs')) return 'vendor-exceljs'
+            if (id.includes('react-organizational-chart')) return 'vendor-org-chart'
           },
         },
       },

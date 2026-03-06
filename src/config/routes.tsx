@@ -1,5 +1,4 @@
 import type { ReactNode, ComponentType } from 'react'
-import * as AntdIcons from '@ant-design/icons'
 import { MenuIconType, MenuTreeDto, MenuType } from '@/services/menu'
 import { useAppStore } from '@/store/useAppStore'
 import { t } from 'i18next'
@@ -13,22 +12,42 @@ export interface MenuRouteItem {
   isExternalLink?: boolean
 }
 
-function buildIcon(node: MenuTreeDto): ReactNode | undefined {
+function buildIcon(
+  node: MenuTreeDto,
+  iconsModule: Record<string, ComponentType> | null,
+): ReactNode | undefined {
   if (!node.icon) return undefined
 
   if (node.iconType === MenuIconType.Picture) {
     return <img src={node.icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />
   }
 
-  const allIcons = AntdIcons as unknown as Record<string, ComponentType>
-  const IconComp = allIcons[node.icon]
+  if (!iconsModule) {
+    return (
+      <span
+        className="anticon anticon-placeholder"
+        style={{
+          display: 'inline-block',
+          width: 16,
+          height: 16,
+          borderRadius: 2,
+          background: 'rgba(0,0,0,.06)',
+        }}
+        aria-hidden
+      />
+    )
+  }
 
+  const IconComp = iconsModule[node.icon]
   if (!IconComp) return undefined
 
   return <IconComp />
 }
 
-function mapMenuTreeToRoutes(nodes: MenuTreeDto[]): MenuRouteItem[] {
+function mapMenuTreeToRoutes(
+  nodes: MenuTreeDto[],
+  iconsModule: Record<string, ComponentType> | null,
+): MenuRouteItem[] {
   const walk = (node: MenuTreeDto): MenuRouteItem | null => {
     // 只把 子系统/目录/菜单 转成路由，操作按钮不在菜单里展示
     if (!node.isVisible || node.type === MenuType.Operation) {
@@ -41,7 +60,7 @@ function mapMenuTreeToRoutes(nodes: MenuTreeDto[]): MenuRouteItem[] {
       path,
       //name: node.name,
       name: t(`menu.${node.code}`),
-      icon: buildIcon(node),
+      icon: buildIcon(node, iconsModule),
       isExternalLink: node.isExternalLink,
     }
 
@@ -65,9 +84,10 @@ function mapMenuTreeToRoutes(nodes: MenuTreeDto[]): MenuRouteItem[] {
 
 export const useMenuRoutes = () => {
   const menuTree = useAppStore((s) => s.menus)
+  const iconsModule = useAppStore((s) => s.iconsModule)
 
   return {
     path: '/',
-    routes: mapMenuTreeToRoutes(menuTree),
+    routes: mapMenuTreeToRoutes(menuTree, iconsModule),
   }
 }

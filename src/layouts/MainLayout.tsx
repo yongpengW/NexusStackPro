@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import type { ComponentType } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { ProLayout } from '@ant-design/pro-components'
 import { BellOutlined } from '@ant-design/icons'
@@ -10,7 +12,17 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const userInfo = useAppStore((s) => s.userInfo)
+  const iconsModule = useAppStore((s) => s.iconsModule)
+  const setIconsModule = useAppStore((s) => s.setIconsModule)
   const route = useMenuRoutes()
+
+  // 懒加载 @ant-design/icons：进入主布局后再拉取，首屏主包不包含整包 icons
+  useEffect(() => {
+    if (iconsModule) return
+    import('@ant-design/icons').then((m) => {
+      setIconsModule(m as unknown as Record<string, ComponentType>)
+    })
+  }, [iconsModule, setIconsModule])
 
   return (
     <ProLayout
