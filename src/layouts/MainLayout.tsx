@@ -15,7 +15,19 @@ const MainLayout: React.FC = () => {
   return (
     <ProLayout
       title="NexusStack"
-      logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+      logo="/nexusstack-logo.png"
+      headerTitleRender={(logo) => (
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+          onClick={() => navigate('/')}
+        >
+          {logo}
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', fontSize: 22, fontWeight: 600 }}>
+            <span style={{ color: '#000' }}>Nexus</span>
+            <span style={{ color: '#C22700' }}>Stack</span>
+          </span>
+        </div>
+      )}
       layout="mix"
       route={route}
       location={{ pathname: location.pathname }}

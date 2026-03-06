@@ -14,6 +14,9 @@ import {
   BellOutlined,
   SafetyOutlined,
 } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
+import { useAppStore } from '@/store/useAppStore'
+import { isBusinessError } from '@/utils/request'
 import { UserApi } from '@/services/user'
 import React, { useState } from 'react'
 
@@ -27,6 +30,7 @@ const menuItems = [
 const AccountSettingsPage: React.FC = () => {
   const [activeKey, setActiveKey] = useState('profile')
   const { message } = App.useApp()
+  const navigate = useNavigate()
 
   return (
     <PageContainer title="账户设置">
@@ -149,9 +153,12 @@ const AccountSettingsPage: React.FC = () => {
                 }
                 try {
                   await UserApi.changePassword({ oldPassword, newPassword, confirmPassword })
-                  message.success('密码修改成功！')
+                  message.success('密码修改成功，请使用新密码重新登录')
+                  useAppStore.getState().logout()
+                  navigate('/user/login')
                   return true
-                } catch (error: any) {
+                } catch (error: unknown) {
+                  if (isBusinessError(error)) message.error(error.message ?? '修改失败')
                   return false
                 }
               }}

@@ -6,24 +6,24 @@ const Footer: React.FC = () => {
   return (
     <DefaultFooter
       style={{ background: 'none' }}
-      copyright="Powered by Ant Design Pro"
+      copyright="Powered by Ant Design"
       links={[
         {
-          key: 'Ant Design Pro',
-          title: 'Ant Design Pro',
-          href: 'https://pro.ant.design',
+          key: 'NexusStack.NET',
+          title: 'NexusStack.NET',
+          href: 'https://github.com/yongpengW/NexusStack',
           blankTarget: true,
         },
         {
           key: 'github',
           title: <GithubOutlined />,
-          href: 'https://github.com/ant-design/ant-design-pro',
+          href: 'https://github.com/yongpengW/NexusStack',
           blankTarget: true,
         },
         {
-          key: 'Ant Design',
-          title: 'Ant Design',
-          href: 'https://ant.design',
+          key: 'NexusStack Pro',
+          title: 'NexusStack Pro',
+          href: 'https://github.com/yongpengW/NexusStackPro',
           blankTarget: true,
         },
       ]}

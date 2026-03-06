@@ -90,10 +90,15 @@ const LoginPage: React.FC = () => {
           logo={
             <img
               alt="logo"
-              src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+              src="/nexusstack-logo.png"
             />
           }
-          title={t('pages.login.title')}
+          title={
+            <span style={{ display: 'inline-block', paddingBottom: 8 }}>
+              <span style={{ color: '#000' }}>Nexus</span>
+              <span style={{ color: '#C22700' }}>Stack</span>
+            </span>
+          }
           subTitle={t('pages.login.subTitle')}
           initialValues={{ autoLogin: true }}
           loading={isPending}
@@ -110,7 +115,8 @@ const LoginPage: React.FC = () => {
             centered
             items={[
               { key: 'account', label: t('pages.login.accountLogin.tab') },
-              { key: 'mobile', label: t('pages.login.phoneLogin.tab') },
+              // 先暂时注释掉手机号登录方式 待后续实现
+              //{ key: 'mobile', label: t('pages.login.phoneLogin.tab') },
             ]}
           />
 
@@ -172,7 +178,12 @@ const LoginPage: React.FC = () => {
             <ProFormCheckbox noStyle name="autoLogin">
               {t('pages.login.rememberMe')}
             </ProFormCheckbox>
-            <a style={{ float: 'right' }}>{t('pages.login.forgotPassword')}</a>
+            <a
+              style={{ float: 'right' }}
+              onClick={() => message.info(t('pages.login.forgotPasswordTip'))}
+            >
+              {t('pages.login.forgotPassword')}
+            </a>
           </div>
         </LoginForm>
       </div>
