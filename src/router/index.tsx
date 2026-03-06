@@ -1,162 +1,183 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import MainLayout from '@/layouts/MainLayout'
+import { Spin } from 'antd'
 import { AuthGuard } from './AuthGuard'
-import HomePage from '@/pages/home'
-import LoginPage from '@/pages/login'
-import NotFoundPage from '@/pages/not-found'
-import AnalysisPage from '@/pages/analysis'
-import RuleListPage from '@/pages/list/rule-list'
-import AccountSettingsPage from '@/pages/account/settings'
 
-// Dashboard
-import DashboardAnalysisPage from '@/pages/dashboard/analysis'
-import DashboardMonitorPage from '@/pages/dashboard/monitor'
-import DashboardWorkplacePage from '@/pages/dashboard/workplace'
+// 路由懒加载占位，避免切换页面时白屏
+const PageFallback = () => (
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: 280,
+    }}
+  >
+    <Spin size="large" />
+  </div>
+)
 
-// Form
-import BasicFormPage from '@/pages/form/basic-form'
-import StepFormPage from '@/pages/form/step-form'
-import AdvancedFormPage from '@/pages/form/advanced-form'
+function withLazy(
+  LazyComponent: React.LazyExoticComponent<React.ComponentType>,
+) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <LazyComponent />
+    </Suspense>
+  )
+}
 
-// List
-import TableListPage from '@/pages/list/table-list'
-import BasicListPage from '@/pages/list/basic-list'
-import CardListPage from '@/pages/list/card-list'
-import SearchListPage from '@/pages/list/search'
+// ─── 布局（进入主界面后再加载） ─────────────────────────────────────────────
+const MainLayout = lazy(() => import('@/layouts/MainLayout'))
 
-// Profile
-import ProfileBasicPage from '@/pages/profile/basic'
-import ProfileAdvancedPage from '@/pages/profile/advanced'
+// ─── 无需鉴权 / 首屏可能命中 ─────────────────────────────────────────────
+const LoginPage = lazy(() => import('@/pages/login'))
+const NotFoundPage = lazy(() => import('@/pages/not-found'))
 
-// Result
-import ResultSuccessPage from '@/pages/result/success'
-import ResultFailPage from '@/pages/result/fail'
+// ─── 主界面内页（按需加载） ─────────────────────────────────────────────
+const HomePage = lazy(() => import('@/pages/home'))
+const AnalysisPage = lazy(() => import('@/pages/analysis'))
+const RuleListPage = lazy(() => import('@/pages/list/rule-list'))
+const AccountSettingsPage = lazy(() => import('@/pages/account/settings'))
 
-// Exception
-import Exception403Page from '@/pages/exception/403'
-import Exception404Page from '@/pages/exception/404'
-import Exception500Page from '@/pages/exception/500'
+const DashboardAnalysisPage = lazy(() => import('@/pages/dashboard/analysis'))
+const DashboardMonitorPage = lazy(() => import('@/pages/dashboard/monitor'))
+const DashboardWorkplacePage = lazy(() => import('@/pages/dashboard/workplace'))
 
-// Account
-import AccountCenterPage from '@/pages/account/center'
+const BasicFormPage = lazy(() => import('@/pages/form/basic-form'))
+const StepFormPage = lazy(() => import('@/pages/form/step-form'))
+const AdvancedFormPage = lazy(() => import('@/pages/form/advanced-form'))
 
-// System
-import RegionPage from '@/pages/system/region'
-import RolePage   from '@/pages/system/role'
-import MenuPage   from '@/pages/system/menu'
-import UserPage   from '@/pages/system/user'
-import OrgPage from '@/pages/system/org'
-import PermissionPage from '@/pages/system/permission'
+const TableListPage = lazy(() => import('@/pages/list/table-list'))
+const BasicListPage = lazy(() => import('@/pages/list/basic-list'))
+const CardListPage = lazy(() => import('@/pages/list/card-list'))
+const SearchListPage = lazy(() => import('@/pages/list/search'))
+
+const ProfileBasicPage = lazy(() => import('@/pages/profile/basic'))
+const ProfileAdvancedPage = lazy(() => import('@/pages/profile/advanced'))
+
+const ResultSuccessPage = lazy(() => import('@/pages/result/success'))
+const ResultFailPage = lazy(() => import('@/pages/result/fail'))
+
+const Exception403Page = lazy(() => import('@/pages/exception/403'))
+const Exception404Page = lazy(() => import('@/pages/exception/404'))
+const Exception500Page = lazy(() => import('@/pages/exception/500'))
+
+const AccountCenterPage = lazy(() => import('@/pages/account/center'))
+
+const RegionPage = lazy(() => import('@/pages/system/region'))
+const RolePage = lazy(() => import('@/pages/system/role'))
+const MenuPage = lazy(() => import('@/pages/system/menu'))
+const UserPage = lazy(() => import('@/pages/system/user'))
+const OrgPage = lazy(() => import('@/pages/system/org'))
+const PermissionPage = lazy(() => import('@/pages/system/permission'))
 
 export const router = createBrowserRouter([
   {
     path: '/user',
     children: [
-      { path: 'login', element: <LoginPage /> },
+      { path: 'login', element: withLazy(LoginPage) },
     ],
   },
   {
     path: '/',
-    element: <AuthGuard><MainLayout /></AuthGuard>,
+    element: (
+      <AuthGuard>
+        <Suspense fallback={<PageFallback />}>
+          <MainLayout />
+        </Suspense>
+      </AuthGuard>
+    ),
     children: [
       { index: true, element: <Navigate to="/dashboard/analysis" replace /> },
-      { path: 'home', element: <HomePage /> },
-      // 旧路径兼容
-      { path: 'analysis', element: <AnalysisPage /> },
+      { path: 'home', element: withLazy(HomePage) },
+      { path: 'analysis', element: withLazy(AnalysisPage) },
 
-      // Dashboard
       {
         path: 'dashboard',
         children: [
           { index: true, element: <Navigate to="/dashboard/analysis" replace /> },
-          { path: 'analysis', element: <DashboardAnalysisPage /> },
-          { path: 'monitor', element: <DashboardMonitorPage /> },
-          { path: 'workplace', element: <DashboardWorkplacePage /> },
+          { path: 'analysis', element: withLazy(DashboardAnalysisPage) },
+          { path: 'monitor', element: withLazy(DashboardMonitorPage) },
+          { path: 'workplace', element: withLazy(DashboardWorkplacePage) },
         ],
       },
 
-      // Form
       {
         path: 'form',
         children: [
           { index: true, element: <Navigate to="/form/basic-form" replace /> },
-          { path: 'basic-form', element: <BasicFormPage /> },
-          { path: 'step-form', element: <StepFormPage /> },
-          { path: 'advanced-form', element: <AdvancedFormPage /> },
+          { path: 'basic-form', element: withLazy(BasicFormPage) },
+          { path: 'step-form', element: withLazy(StepFormPage) },
+          { path: 'advanced-form', element: withLazy(AdvancedFormPage) },
         ],
       },
 
-      // List
       {
         path: 'list',
         children: [
           { index: true, element: <Navigate to="/list/table-list" replace /> },
-          { path: 'rule-list', element: <RuleListPage /> },
-          { path: 'table-list', element: <TableListPage /> },
-          { path: 'basic-list', element: <BasicListPage /> },
-          { path: 'card-list', element: <CardListPage /> },
-          { path: 'search', element: <SearchListPage /> },
+          { path: 'rule-list', element: withLazy(RuleListPage) },
+          { path: 'table-list', element: withLazy(TableListPage) },
+          { path: 'basic-list', element: withLazy(BasicListPage) },
+          { path: 'card-list', element: withLazy(CardListPage) },
+          { path: 'search', element: withLazy(SearchListPage) },
         ],
       },
 
-      // Profile
       {
         path: 'profile',
         children: [
           { index: true, element: <Navigate to="/profile/basic" replace /> },
-          { path: 'basic', element: <ProfileBasicPage /> },
-          { path: 'advanced', element: <ProfileAdvancedPage /> },
+          { path: 'basic', element: withLazy(ProfileBasicPage) },
+          { path: 'advanced', element: withLazy(ProfileAdvancedPage) },
         ],
       },
 
-      // Result
       {
         path: 'result',
         children: [
           { index: true, element: <Navigate to="/result/success" replace /> },
-          { path: 'success', element: <ResultSuccessPage /> },
-          { path: 'fail', element: <ResultFailPage /> },
+          { path: 'success', element: withLazy(ResultSuccessPage) },
+          { path: 'fail', element: withLazy(ResultFailPage) },
         ],
       },
 
-      // Exception
       {
         path: 'exception',
         children: [
           { index: true, element: <Navigate to="/exception/404" replace /> },
-          { path: '403', element: <Exception403Page /> },
-          { path: '404', element: <Exception404Page /> },
-          { path: '500', element: <Exception500Page /> },
+          { path: '403', element: withLazy(Exception403Page) },
+          { path: '404', element: withLazy(Exception404Page) },
+          { path: '500', element: withLazy(Exception500Page) },
         ],
       },
 
-      // Account
       {
         path: 'account',
         children: [
           { index: true, element: <Navigate to="/account/center" replace /> },
-          { path: 'center', element: <AccountCenterPage /> },
-          { path: 'settings', element: <AccountSettingsPage /> },
+          { path: 'center', element: withLazy(AccountCenterPage) },
+          { path: 'settings', element: withLazy(AccountSettingsPage) },
         ],
       },
 
-      // System
       {
         path: 'system',
         children: [
           { index: true, element: <Navigate to="/system/region" replace /> },
-          { path: 'region', element: <RegionPage /> },
-          { path: 'role',   element: <RolePage /> },
-          { path: 'menu',   element: <MenuPage /> },
-          { path: 'user',   element: <UserPage /> },
-          { path: 'permission', element: <PermissionPage /> },
-          { path: 'org', element: <OrgPage /> },
+          { path: 'region', element: withLazy(RegionPage) },
+          { path: 'role', element: withLazy(RolePage) },
+          { path: 'menu', element: withLazy(MenuPage) },
+          { path: 'user', element: withLazy(UserPage) },
+          { path: 'permission', element: withLazy(PermissionPage) },
+          { path: 'org', element: withLazy(OrgPage) },
         ],
       },
     ],
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: withLazy(NotFoundPage),
   },
 ])
