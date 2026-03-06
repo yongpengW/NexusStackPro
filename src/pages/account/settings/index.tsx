@@ -74,7 +74,7 @@ const AccountSettingsPage: React.FC = () => {
       mobile: me.mobile,
       email: me.email,
       gender: me.gender ?? Gender.Unknown,
-      remark: (me as any)?.remark ?? undefined,
+      remark: (me as CurrentUserDto & { remark?: string })?.remark ?? undefined,
     })
   }, [activeKey, me, profileForm])
 
@@ -181,7 +181,7 @@ const AccountSettingsPage: React.FC = () => {
                       mobile: me.mobile,
                       email: me.email,
                       gender: me.gender ?? Gender.Unknown,
-                      remark: (me as any)?.remark ?? undefined,
+                      remark: (me as CurrentUserDto & { remark?: string })?.remark ?? undefined,
                     }}
                     onFinish={async (values) => {
                       const payload: CreateUserDto = {

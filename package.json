@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "preview:test": "vite preview --mode test",
     "preview:staging": "vite preview --mode staging",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check": "tsc --noEmit && eslint ."
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

@@ -216,7 +216,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     return undefined as T
   }
 
-  let body = await parseResponseBody<RequestResultModel<T>>(response)
+  const body = await parseResponseBody<RequestResultModel<T>>(response)
 
   // ─── 401：先尝试刷新 token，成功后重试原请求 ───────────────────────────────
   const is401 =

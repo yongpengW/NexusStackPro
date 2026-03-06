@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- 路由配置含 lazy 组件与 withLazy，非纯组件导出 */
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { Spin } from 'antd'

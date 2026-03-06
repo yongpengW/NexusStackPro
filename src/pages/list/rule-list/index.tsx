@@ -226,7 +226,7 @@ const RuleListPage: React.FC = () => {
           <ProDescriptions<RuleItem>
             column={1}
             dataSource={currentRow}
-            columns={columns as any}
+            columns={columns as ProColumns<RuleItem>[]}
           />
         )}
       </Drawer>

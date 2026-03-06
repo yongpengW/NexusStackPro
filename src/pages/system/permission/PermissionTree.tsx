@@ -126,15 +126,18 @@ export function PermissionTree({
     onCheckChange(checkedArr as number[], (info.halfCheckedKeys ?? []) as number[])
   }
 
-  const openApiDrawer = async (menuId: number, menuName: string) => {
-    setApiDrawerMenu({ menuId, menuName })
-    setApiDrawerOpen(true)
-    if (!expandedApiBindings[menuId] && loadingApiMenuId !== menuId) {
-      setLoadingApiMenuId(menuId)
-      await loadApiBindings(menuId)
-      setLoadingApiMenuId(null)
-    }
-  }
+  const openApiDrawer = useCallback(
+    async (menuId: number, menuName: string) => {
+      setApiDrawerMenu({ menuId, menuName })
+      setApiDrawerOpen(true)
+      if (!expandedApiBindings[menuId] && loadingApiMenuId !== menuId) {
+        setLoadingApiMenuId(menuId)
+        await loadApiBindings(menuId)
+        setLoadingApiMenuId(null)
+      }
+    },
+    [expandedApiBindings, loadingApiMenuId, loadApiBindings],
+  )
 
   const renderApiBindings = (menuId: number) => {
     const list = expandedApiBindings[menuId]
@@ -197,7 +200,6 @@ export function PermissionTree({
 
   // titleRender：用 useCallback 稳定引用，只在依赖项实际变化时重建，
   // 避免每次父组件 re-render 都给 Tree 传入新函数引用。
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const renderNodeTitle = useCallback((nodeData: DataNode) => {
     const origin = (nodeData as PermissionTreeNode).extra?.origin
     if (!origin) return <span>{nodeData.title as string}</span>
@@ -246,7 +248,7 @@ export function PermissionTree({
   // 但它们的所有依赖项（apiExpandedMenuIds、expandedApiBindings、loadingApiMenuId）
   // 都已包含在此列表中，故闭包始终与最新状态一致，eslint-disable 屏蔽此保守警告。
   // loadApiBindings 是稳定 prop（调用方应保证引用稳定），不加入 deps 以避免冗余重建。
-  }, [loadingApiMenuId, checkedKeys, dataRangeMap, isSystemRole, expandedApiBindings, onDataRangeChange])
+  }, [checkedKeys, dataRangeMap, isSystemRole, onDataRangeChange, openApiDrawer])
 
   if (!permissionTree.length && !loading) {
     return (
@@ -341,7 +343,7 @@ export function PermissionTree({
             expandedKeys={expandedKeys}
             titleRender={renderNodeTitle}
             onExpand={(keys) => setExpandedKeys(keys)}
-            onCheck={handleCheck as any}
+            onCheck={handleCheck as React.ComponentProps<typeof Tree>['onCheck']}
           />
         </Spin>
       </div>

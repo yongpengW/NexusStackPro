@@ -113,7 +113,7 @@ export function MenuDrawer({
       form.setFieldsValue({
         ...detail,
         // Select option 的 value 统一用 string（含根节点 '0'），避免超大雪花 ID Number 精度丢失导致无法命中 option
-        parentId: String((detail as any)?.parentId ?? 0),
+        parentId: String(detail?.parentId ?? 0),
       })
     } else if (!isEdit && open) {
       const nextType = parentNode
@@ -122,7 +122,7 @@ export function MenuDrawer({
       form.setFieldsValue({
         name: undefined,
         code: undefined,
-        parentId: String((parentNode as any)?.id ?? 0),
+        parentId: String(parentNode?.id ?? 0),
         type: nextType,
         platformType: parentNode ? parentNode.platformType : platformType || undefined,
         url: undefined,
@@ -172,7 +172,7 @@ export function MenuDrawer({
         parentId:
           values.parentId === '0' || values.parentId === 0 || values.parentId == null
             ? undefined
-            : (values.parentId as any),
+            : Number(values.parentId),
         order: values.order ?? 0,
         isVisible: values.isVisible ?? true,
         isExternalLink: values.isExternalLink ?? false,

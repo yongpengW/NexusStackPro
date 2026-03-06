@@ -277,8 +277,6 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
       if (isBusinessError(err)) message.error(err.message || '加载 API 绑定失败')
       return []
     }
-  // message 来自 App.useApp()，引用稳定；PermissionApi 是模块常量
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message])
 
   const save = async () => {

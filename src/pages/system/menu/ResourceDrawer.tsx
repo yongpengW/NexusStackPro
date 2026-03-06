@@ -64,7 +64,7 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
     enabled: open && !!menu,
   })
 
-  const groups = resourceQuery.data ?? []
+  const groups = useMemo(() => resourceQuery.data ?? [], [resourceQuery.data])
   const [checkedIds, setCheckedIds] = useState<number[]>([])
   const [activeKeys, setActiveKeys] = useState<string[]>([])
 

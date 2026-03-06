@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- 入口文件含未导出的 Root / GlobalAppSetup */
 import '@ant-design/v5-patch-for-react-19'
 import '@/locales/i18n'
 import '@/utils/dateUtils' // 全局初始化 dayjs 插件（utc / timezone / relativeTime）
