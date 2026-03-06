@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { ProLayout } from '@ant-design/pro-components'
-import { BellOutlined, SettingOutlined } from '@ant-design/icons'
+import { BellOutlined } from '@ant-design/icons'
 import { Badge } from 'antd'
 import { useAppStore } from '@/store/useAppStore'
 import { AvatarDropdown, AvatarName, Footer, Question, SelectLang } from '@/components'
@@ -75,11 +75,6 @@ const MainLayout: React.FC = () => {
         <Badge key="bell" count={5} size="small">
           <BellOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
         </Badge>,
-        <SettingOutlined
-          key="setting"
-          style={{ fontSize: 16, cursor: 'pointer' }}
-          onClick={() => navigate('/account/settings')}
-        />,
       ]}
       footerRender={() => <Footer />}
       bgLayoutImgList={[

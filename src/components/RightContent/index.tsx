@@ -19,10 +19,11 @@ const actionStyle: React.CSSProperties = {
 export const Question: React.FC = () => {
   return (
     <a
-      href="https://pro.ant.design/docs/getting-started"
+      href="https://github.com/yongpengW/NexusStackPro"
       target="_blank"
       rel="noreferrer"
       style={actionStyle}
+      title='FAQ'
     >
       <QuestionCircleOutlined />
     </a>

@@ -1,31 +1,5 @@
-import type { ReactNode } from 'react'
-import {
-  HomeOutlined,
-  BarChartOutlined,
-  TableOutlined,
-  UnorderedListOutlined,
-  UserOutlined,
-  SmileOutlined,
-  CrownOutlined,
-  DashboardOutlined,
-  MonitorOutlined,
-  DesktopOutlined,
-  FormOutlined,
-  ProfileOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  AppstoreOutlined,
-  OrderedListOutlined,
-  FileTextOutlined,
-  StepForwardOutlined,
-  ControlOutlined,
-  SettingOutlined,
-  ClusterOutlined,
-  ApartmentOutlined,
-  TeamOutlined,
-  AppstoreAddOutlined,
-  SafetyCertificateOutlined,
-} from '@ant-design/icons'
+import type { ReactNode, ComponentType } from 'react'
+import * as AntdIcons from '@ant-design/icons'
 import { MenuIconType, MenuTreeDto, MenuType } from '@/services/menu'
 import { useAppStore } from '@/store/useAppStore'
 import { t } from 'i18next'
@@ -39,34 +13,6 @@ export interface MenuRouteItem {
   isExternalLink?: boolean
 }
 
-const ICON_MAP: Record<string, ReactNode> = {
-  HomeOutlined: <HomeOutlined />,
-  BarChartOutlined: <BarChartOutlined />,
-  TableOutlined: <TableOutlined />,
-  UnorderedListOutlined: <UnorderedListOutlined />,
-  UserOutlined: <UserOutlined />,
-  SmileOutlined: <SmileOutlined />,
-  CrownOutlined: <CrownOutlined />,
-  DashboardOutlined: <DashboardOutlined />,
-  MonitorOutlined: <MonitorOutlined />,
-  DesktopOutlined: <DesktopOutlined />,
-  FormOutlined: <FormOutlined />,
-  ProfileOutlined: <ProfileOutlined />,
-  CheckCircleOutlined: <CheckCircleOutlined />,
-  WarningOutlined: <WarningOutlined />,
-  AppstoreOutlined: <AppstoreOutlined />,
-  OrderedListOutlined: <OrderedListOutlined />,
-  FileTextOutlined: <FileTextOutlined />,
-  StepForwardOutlined: <StepForwardOutlined />,
-  ControlOutlined: <ControlOutlined />,
-  SettingOutlined: <SettingOutlined />,
-  ClusterOutlined: <ClusterOutlined />,
-  ApartmentOutlined: <ApartmentOutlined />,
-  TeamOutlined: <TeamOutlined />,
-  AppstoreAddOutlined: <AppstoreAddOutlined />,
-  SafetyCertificateOutlined: <SafetyCertificateOutlined />,
-}
-
 function buildIcon(node: MenuTreeDto): ReactNode | undefined {
   if (!node.icon) return undefined
 
@@ -74,7 +20,12 @@ function buildIcon(node: MenuTreeDto): ReactNode | undefined {
     return <img src={node.icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />
   }
 
-  return ICON_MAP[node.icon] ?? undefined
+  const allIcons = AntdIcons as unknown as Record<string, ComponentType>
+  const IconComp = allIcons[node.icon]
+
+  if (!IconComp) return undefined
+
+  return <IconComp />
 }
 
 function mapMenuTreeToRoutes(nodes: MenuTreeDto[]): MenuRouteItem[] {
