@@ -18,6 +18,7 @@ import Footer from '@/components/Footer'
 import { loginByPassword } from '@/services/auth'
 import { ApiError } from '@/utils/request'
 import { useAppStore } from '@/store/useAppStore'
+import { MenuApi, PlatformType } from '@/services/menu'
 import './index.css'
 
 type LoginType = 'account' | 'mobile'
@@ -53,11 +54,19 @@ const LoginPage: React.FC = () => {
   const { t } = useTranslation()
   const setLoginData = useAppStore((s) => s.setLoginData)
   const setRememberMe = useAppStore((s) => s.setRememberMe)
+  const setMenus = useAppStore((s) => s.setMenus)
 
   const { mutate: submitLogin, isPending } = useMutation({
     mutationFn: loginByPassword,
-    onSuccess: (result) => {
+    // 登录成功后：先写入 token，再拉取当前用户菜单，最后跳转主界面
+    onSuccess: async (result) => {
       setLoginData(result)
+      try {
+        const menus = await MenuApi.getUserTree(PlatformType.Pc)
+        setMenus(menus)
+      } catch {
+        // 菜单获取失败时先不拦截登录流程，由主界面空菜单提示
+      }
       message.success(t('pages.login.success'))
       // 登录前被守卫拦截时，location.state.from 记录原路径，登录成功后回跳
       const from = (location.state as { from?: Location })?.from

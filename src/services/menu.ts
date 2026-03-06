@@ -131,6 +131,9 @@ export const MenuApi = {
     )
   },
 
+  getUserTree: (platformType: number) => 
+    http.get<MenuTreeDto[]>(buildUrl(`/Menu/usertree/${platformType}`)),
+
   getById: (id: number) =>
     http.get<MenuDto>(`/Menu/${id}`),
 

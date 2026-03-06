@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { LoginResult } from '@/services/auth'
+import type { MenuTreeDto } from '@/services/menu'
 
 // ─── localStorage key ────────────────────────────────────────────────────────
 const TOKEN_KEY = 'access_token'
@@ -27,11 +28,16 @@ interface AppState {
   /** 刷新 token */
   refreshToken: string | null
 
+  /** 当前用户的菜单树（根据平台过滤后） */
+  menus: MenuTreeDto[]
+
   setLoading: (loading: boolean) => void
   /** 设置是否自动登录 */
   setRememberMe: (remember: boolean) => void
   /** 登录成功后统一写入用户信息和双 token */
   setLoginData: (result: LoginResult) => void
+  /** 设置当前用户菜单树 */
+  setMenus: (menus: MenuTreeDto[]) => void
   /** 登出：清空状态与 localStorage */
   logout: () => void
 }
@@ -59,6 +65,7 @@ export const useAppStore = create<AppState>()(
       userInfo: initialRememberMe ? restoreUserInfo() : null,
       token: initialRememberMe ? localStorage.getItem(TOKEN_KEY) : null,
       refreshToken: initialRememberMe ? localStorage.getItem(REFRESH_TOKEN_KEY) : null,
+      menus: [],
 
       setLoading: (loading) => set({ loading }, false, 'setLoading'),
 
@@ -102,6 +109,8 @@ export const useAppStore = create<AppState>()(
           'setLoginData',
         )
       },
+
+      setMenus: (menus) => set({ menus }, false, 'setMenus'),
 
       logout: () => {
         localStorage.removeItem(TOKEN_KEY)

@@ -37,6 +37,22 @@ const MainLayout: React.FC = () => {
       onMenuHeaderClick={() => navigate('/')}
       menuItemRender={(item, dom) => {
         if (!item.path) return dom
+
+        // 外链菜单：直接使用 a 标签新开页签
+        if (item.isExternalLink) {
+          return (
+            <a
+              href={item.path}
+              target="_blank"
+              rel="noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+            >
+              {item.icon && <span className="anticon">{item.icon}</span>}
+              <span>{item.name}</span>
+            </a>
+          )
+        }
+
         // mix 布局侧边栏默认不渲染子菜单图标，手动补齐
         return (
           <Link to={item.path} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
