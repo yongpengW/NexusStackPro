@@ -5,6 +5,8 @@ node_modules/
 
 # Build outputs
 dist/
+dist-test/
+dist-staging/
 dist-ssr/
 build/
 
