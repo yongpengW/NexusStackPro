@@ -14,6 +14,7 @@ import {
   Switch,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import {
   MenuApi,
   MenuType,
@@ -138,7 +139,9 @@ export function MenuDrawer({
       queryClient.invalidateQueries({ queryKey: ['menu'] })
       onSuccess()
     },
-    onError: (err: Error) => setErrorMsg(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) setErrorMsg(err.message ?? '操作失败')
+    },
   })
 
   const updateMutation = useMutation({
@@ -148,7 +151,9 @@ export function MenuDrawer({
       queryClient.invalidateQueries({ queryKey: ['menu'] })
       onSuccess()
     },
-    onError: (err: Error) => setErrorMsg(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) setErrorMsg(err.message ?? '操作失败')
+    },
   })
 
   const submitting = createMutation.isPending || updateMutation.isPending

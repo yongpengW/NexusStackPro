@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { App } from 'antd'
 import { useMutation } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { RoleApi } from '@/services/role'
 import type { RoleDto } from '@/services/role'
 
@@ -22,7 +23,9 @@ export function useRole(reload: () => void) {
   const enableMutation = useMutation({
     mutationFn: (id: number) => RoleApi.enable(id),
     onSuccess: () => { message.success('已启用'); reload() },
-    onError:   (err: Error) => message.error(err.message ?? '操作失败'),
+    onError:   (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -30,7 +33,9 @@ export function useRole(reload: () => void) {
   const disableMutation = useMutation({
     mutationFn: (id: number) => RoleApi.disable(id),
     onSuccess: () => { message.success('已禁用'); reload() },
-    onError:   (err: Error) => message.error(err.message ?? '操作失败'),
+    onError:   (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -38,7 +43,9 @@ export function useRole(reload: () => void) {
   const removeMutation = useMutation({
     mutationFn: (id: number) => RoleApi.remove(id),
     onSuccess: () => { message.success('删除成功'); reload() },
-    onError:   (err: Error) => message.error(err.message ?? '删除失败'),
+    onError:   (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '删除失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 

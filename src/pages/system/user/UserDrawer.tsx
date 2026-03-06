@@ -15,6 +15,7 @@ import {
   TreeSelect,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { UserApi, Gender, type CreateUserDto, type UserDto } from '@/services/user'
 import { RoleApi, type SelectOptionDto as RoleSelectOptionDto } from '@/services/role'
 import { RegionApi, type SelectOptionDto as RegionSelectOptionDto } from '@/services/region'
@@ -98,7 +99,9 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
     onSuccess()
   }
 
-  const handleError = (err: Error) => setErrorMsg(err.message ?? '操作失败')
+  const handleError = (err: Error) => {
+    if (isBusinessError(err)) setErrorMsg(err.message ?? '操作失败')
+  }
 
   const createMutation = useMutation({
     mutationFn: (data: CreateUserDto) => UserApi.create(data),

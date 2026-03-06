@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { App } from 'antd'
+import { isBusinessError } from '@/utils/request'
 import { RoleApi, PlatformType, DataRange, MenuType } from '@/services/role'
 import type { RoleDto } from '@/services/role'
 import { PermissionApi } from '@/services/permission'
@@ -154,8 +155,8 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
       setHalfCheckedKeys([])
       setDataRangeMap(collectCheckedDataRanges(tree))
       setIsDirty(false)
-    } catch (err: any) {
-      message.error(err?.message || '加载权限树失败')
+    } catch (err: unknown) {
+      if (isBusinessError(err)) message.error(err.message || '加载权限树失败')
       resetPermissionState()
     } finally {
       setLoadingPermissions(false)
@@ -188,8 +189,8 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
       const defaultRole = firstNonSystem ?? list[0]
       setSelectedRoleId(defaultRole.id)
       await loadPermissions(defaultRole.id, platform)
-    } catch (err: any) {
-      message.error(err?.message || '加载角色列表失败')
+    } catch (err: unknown) {
+      if (isBusinessError(err)) message.error(err.message || '加载角色列表失败')
       setRoleList([])
       setSelectedRoleId(null)
       resetPermissionState()
@@ -272,8 +273,8 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
       const data = await PermissionApi.getMenuResources(menuId)
       setExpandedApiBindings((prev) => ({ ...prev, [menuId]: data ?? [] }))
       return data ?? []
-    } catch (err: any) {
-      message.error(err?.message || '加载 API 绑定失败')
+    } catch (err: unknown) {
+      if (isBusinessError(err)) message.error(err.message || '加载 API 绑定失败')
       return []
     }
   // message 来自 App.useApp()，引用稳定；PermissionApi 是模块常量
@@ -302,8 +303,8 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
       )
       setIsDirty(false)
       await loadPermissions(selectedRoleId, platformType)
-    } catch (err: any) {
-      message.error(err?.message || '保存权限失败')
+    } catch (err: unknown) {
+      if (isBusinessError(err)) message.error(err.message || '保存权限失败')
     } finally {
       setSaving(false)
     }

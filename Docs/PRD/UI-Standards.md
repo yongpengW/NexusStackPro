@@ -13,6 +13,7 @@
 3. **App 上下文**：在组件内统一从 `App.useApp()` 获取 `modal / message / notification`，**禁止使用**静态方法（`Modal.confirm()`、`message.success()` 等），React 19 中静态方法无法获取 ConfigProvider 主题。
 4. **HTTP 工具**：使用项目封装的 `http`（`@/utils/request`），GET 参数用 `buildUrl` 工具函数拼接，POST/PUT body 直接传对象。
 5. **组件复用**：相同功能的状态 Tag、操作列 Dropdown、Drawer 标题逻辑须抽取为公共组件或 Hook，避免在每个页面重复实现。
+6. **错误提示不重复**：网络/401/403/500 等已由 `request.ts` 全局统一提示，**禁止**在业务代码里再次对上述错误调用 `message.error()` 或 `notification`，否则用户会看到**同一条错误被提示两次**。业务层**必须**使用 `@/utils/request` 导出的 **`isBusinessError(err)`** 判断后再提示（仅 `isBusinessError(err)` 为 `true` 时才可 `message.error` / `setErrorMsg`）。详见 **十二、12.6 节**。
 
 ---
 
@@ -99,7 +100,84 @@ interface IPagedList<T> {
 
 ---
 
-## 三、页面容器规范
+## 三、日期时间工具（dateUtils）
+
+**路径**：`@/utils/dateUtils.ts`  
+**依赖**：dayjs（utc、timezone、relativeTime 插件，中文 locale 已配置）
+
+### 3.1 时区与格式约定
+
+- **后端**：时间字符串统一为 **UTC ISO 8601**（带 `Z` 后缀，如 `2026-02-28T06:24:13.000Z`）。
+- **前端展示**：统一转为**用户本地时区**显示；dayjs 解析带 `Z` 的字符串会自动识别 UTC，`format()` 输出为本地时间，无需手写转换。
+- **提交后端**：表单/接口提交前，将本地时间或 dayjs 对象通过工具函数转回 **UTC ISO 字符串**。
+
+### 3.2 展示用：UTC → 本地
+
+| 函数 | 说明 | 典型用法 |
+|------|------|----------|
+| `formatDateTime(value, format?)` | 格式化为日期时间，默认 `YYYY-MM-DD HH:mm:ss` | 列表列、详情页完整时间 |
+| `formatDate(value)` | 仅日期 `YYYY-MM-DD` | 生日、创建日期 |
+| `formatTime(value)` | 仅时间 `HH:mm:ss` | 仅需时间段的场景 |
+| `fromNow(value)` | 相对时间（如「3 小时前」「2 天前」） | 消息通知、操作日志 |
+
+**入参**：`value` 可为后端返回的 UTC 字符串、时间戳，或 `null/undefined`（返回 `'-'`）。
+
+```tsx
+import { formatDateTime, formatDate, fromNow } from '@/utils/dateUtils'
+
+// ProTable 列
+{ title: '创建时间', dataIndex: 'createTime', render: (_, r) => formatDateTime(r.createTime) }
+
+// 相对时间
+<span>{fromNow(record.lastLoginTime)}</span>
+```
+
+### 3.3 格式常量
+
+统一使用导出的常量，避免魔法字符串：
+
+```typescript
+import { DATE_FORMAT, TIME_FORMAT, DATETIME_FORMAT, DATETIME_MINUTE_FORMAT } from '@/utils/dateUtils'
+// DATE_FORMAT         = 'YYYY-MM-DD'
+// TIME_FORMAT         = 'HH:mm:ss'
+// DATETIME_FORMAT     = 'YYYY-MM-DD HH:mm:ss'
+// DATETIME_MINUTE_FORMAT = 'YYYY-MM-DD HH:mm'
+```
+
+### 3.4 提交用：本地 → UTC ISO
+
+| 函数 | 说明 | 典型用法 |
+|------|------|----------|
+| `toUtcISOString(value)` | dayjs 或本地时间字符串 → UTC ISO 字符串 | 表单单时间字段提交 |
+| `toUtcRangePair(range)` | `[start, end]` dayjs 范围 → `[startISO, endISO]` | DatePicker.RangePicker 提交 |
+
+```tsx
+import { toUtcISOString, toUtcRangePair } from '@/utils/dateUtils'
+
+// 单时间提交
+onFinish: (values) => {
+  const createTime = toUtcISOString(values.createTime)  // 可能为 null
+  await http.post('/Api', { ...values, createTime })
+}
+
+// 范围选择器
+const [start, end] = toUtcRangePair(values.dateRange)
+await http.get(buildUrl('/Api/list', { startTime: start, endTime: end }))
+```
+
+### 3.5 其他：formatCurrency
+
+同文件内提供金额展示（保留两位小数），与日期无直接关系，可按需使用：
+
+```typescript
+import { formatCurrency } from '@/utils/dateUtils'
+formatCurrency(1234.5)  // → '1234.50'
+formatCurrency(null)    // → '0.00'
+```
+
+---
+
+## 四、页面容器规范
 
 所有管理页面必须使用 `PageContainer`：
 
@@ -120,9 +198,9 @@ const MyPage: React.FC = () => (
 
 ---
 
-## 四、ProTable 使用规范
+## 五、ProTable 使用规范
 
-### 4.1 标准结构
+### 5.1 标准结构
 
 ```tsx
 import type { ActionType, ProColumns } from '@ant-design/pro-components'
@@ -160,7 +238,7 @@ const MyListPage: React.FC = () => {
       valueType: 'option',
       render: (_, record) => [
         <a key="edit" onClick={() => handleEdit(record)}>编辑</a>,
-        // 超过 3 个操作时用 Dropdown（见 4.3 节）
+        // 超过 3 个操作时用 Dropdown（见 5.3 节）
       ],
     },
   ]
@@ -201,7 +279,7 @@ const MyListPage: React.FC = () => {
 }
 ```
 
-### 4.2 必填属性
+### 5.2 必填属性
 
 | 属性 | 要求 | 说明 |
 |---|---|---|
@@ -210,7 +288,7 @@ const MyListPage: React.FC = () => {
 | `search` | `{ labelWidth: 'auto' }` | 搜索栏标签宽度自动 |
 | `pagination` | `{ pageSize: 10, showSizeChanger: true }` | 标准分页 |
 
-### 4.3 操作列规范
+### 5.3 操作列规范
 
 - 操作 ≤ 2 个：直接展示为 `<a>` 链接；
 - 操作 3–4 个：前 2 个直接显示，其余收入"更多"Dropdown；
@@ -241,7 +319,7 @@ render: (_, record) => [
 
 ---
 
-## 五、树形表格规范（Region / Menu 页面）
+## 六、树形表格规范（Region / Menu 页面）
 
 树形数据（Region、Menu）使用标准 Ant Design `Table` 的 `expandable` 模式，**不使用** ProTable 的树形模式（层级控制差异大）：
 
@@ -265,9 +343,9 @@ import type { ColumnsType } from 'antd/es/table'
 
 ---
 
-## 六、Drawer + ProForm 表单规范
+## 七、Drawer + ProForm 表单规范
 
-### 6.1 标准结构
+### 7.1 标准结构
 
 ```tsx
 import { ProForm, ProFormText, ProFormSelect, ProFormSwitch, DrawerForm } from '@ant-design/pro-components'
@@ -312,7 +390,7 @@ import { ProForm, ProFormText, ProFormSelect, ProFormSwitch, DrawerForm } from '
 
 > **DrawerForm vs Drawer+Form**：优先使用 `DrawerForm`（`@ant-design/pro-components` 导出），它自带 loading 状态、提交逻辑和关闭联动，减少样板代码。特别复杂的场景（多步骤、嵌套复杂交互）才回退到手动 `Drawer` + `Form`。
 
-### 6.2 ProForm 常用字段组件映射
+### 7.2 ProForm 常用字段组件映射
 
 | 场景 | 组件 |
 |---|---|
@@ -328,7 +406,7 @@ import { ProForm, ProFormText, ProFormSelect, ProFormSwitch, DrawerForm } from '
 
 ---
 
-## 七、确认弹窗规范
+## 八、确认弹窗规范
 
 ```tsx
 // ✅ 正确：从 App.useApp() 获取
@@ -353,9 +431,9 @@ Modal.confirm({ ... })
 
 ---
 
-## 八、状态 Tag 颜色规范
+## 九、状态 Tag 颜色规范
 
-### 8.1 启用/禁用状态
+### 9.1 启用/禁用状态
 
 ```tsx
 <Tag color={isEnable ? 'success' : 'default'}>
@@ -363,7 +441,7 @@ Modal.confirm({ ... })
 </Tag>
 ```
 
-### 8.2 平台类型 Tag（PlatformType Flags 枚举拆解）
+### 9.2 平台类型 Tag（PlatformType Flags 枚举拆解）
 
 ```typescript
 // @/utils/platform.ts  建议封装为公共工具
@@ -395,7 +473,7 @@ export function PlatformTags({ platforms }: { platforms: number }) {
 <PlatformTags platforms={record.platforms} />
 ```
 
-### 8.3 菜单类型 Tag
+### 9.3 菜单类型 Tag
 
 ```typescript
 export const MENU_TYPE_MAP: Record<number, { label: string; color: string }> = {
@@ -408,7 +486,7 @@ export const MENU_TYPE_MAP: Record<number, { label: string; color: string }> = {
 
 ---
 
-## 九、loading 状态规范
+## 十、loading 状态规范
 
 | 场景 | 实现方式 |
 |---|---|
@@ -420,7 +498,7 @@ export const MENU_TYPE_MAP: Record<number, { label: string; color: string }> = {
 
 ---
 
-## 十、权限管理页面（左右分栏）规范
+## 十一、权限管理页面（左右分栏）规范
 
 权限管理页采用左右分栏布局，不使用 ProTable：
 
@@ -473,9 +551,11 @@ import { Tree } from 'antd'
 
 ---
 
-## 十一、React Query 使用规范
+## 十二、React Query 使用规范
 
-### 11.1 全局配置（已在 main.tsx 设定，开发时无需修改）
+> **错误处理**：使用 `useMutation` / `useQuery` 时，务必阅读 **12.6 节**，避免在业务代码中重复 `message`/`notification` 导致同一条错误提示两次。
+
+### 12.1 全局配置（已在 main.tsx 设定，开发时无需修改）
 
 ```typescript
 // main.tsx
@@ -497,7 +577,7 @@ const queryClient = new QueryClient({
 
 ---
 
-### 11.2 何时用 React Query，何时用 ProTable.request
+### 12.2 何时用 React Query，何时用 ProTable.request
 
 | 场景 | 推荐方式 | 原因 |
 |---|---|---|
@@ -510,7 +590,7 @@ const queryClient = new QueryClient({
 
 ---
 
-### 11.3 QueryKey 命名约定
+### 12.3 QueryKey 命名约定
 
 QueryKey 必须是数组，第一个元素为资源名（小写复数），后续元素为查询参数：
 
@@ -529,7 +609,7 @@ QueryKey 必须是数组，第一个元素为资源名（小写复数），后�
 
 ---
 
-### 11.4 useQuery 使用模式
+### 12.4 useQuery 使用模式
 
 #### 树形/列表数据
 
@@ -578,7 +658,7 @@ const { data: permissionTree = [], isLoading: treeLoading } = useQuery({
 
 ---
 
-### 11.5 useMutation 使用模式
+### 12.5 useMutation 使用模式
 
 #### 标准 mutation 结构（以新增区域为例）
 
@@ -677,32 +757,109 @@ const handleDelete = (record: RegionDto) => {
 
 ---
 
-### 11.6 与 request.ts 全局错误处理的协作关系
+### 12.6 与 request.ts 全局错误处理的协作关系（必读，避免重复提示）
 
-项目的 `request.ts` 已内置全局错误拦截：
+> **重要**：`request.ts` 已对部分错误做了**全局统一提示**（如 notification / 跳转）。若在业务文件中再包一层 `message.error()` / `notification.error()` / `try { ... } catch (e) { message.error(e.message) }`，用户会看到**同一条错误被提示两次**。开发时务必遵守下方分工，**禁止对“已被全局处理的错误”再次弹窗或 Toast**。
 
-| 错误类型 | request.ts 处理 | React Query onError 是否需要处理 |
-|---|---|---|
-| 网络不通（code=0） | `globalNotification.error('网络连接失败')` | **不需要**，静默即可 |
-| 401 未登录 | 自动刷新 token / 登出跳转 | **不需要** |
-| 403 无权限 | `globalNotification.error('无访问权限')` | **不需要** |
-| 500 服务器错误 | `globalNotification.error('服务器错误')` | **不需要** |
-| 其他业务错误（4xx） | **不处理**，抛出 `ApiError` | **需要处理**，用 `message.error(err.message)` |
+#### ⭐ 推荐：统一使用 `isBusinessError`（必用）
 
-因此 **`onError` 的标准写法**：
+项目在 `@/utils/request` 中提供了 **`isBusinessError(err)`** 辅助函数，用于判断「是否应由业务层自行提示」：**仅当返回 `true` 时才可 `message.error()` 或 `setErrorMsg()`**，否则表示该错误已被全局处理，业务层静默即可。
 
 ```typescript
+// @/utils/request 导出
+export function isBusinessError(err: unknown): err is ApiError {
+  return err instanceof ApiError && ![0, 401, 403, 500].includes(err.code)
+}
+```
+
+**规范要求**：所有 `onError`、`catch` 中的错误提示逻辑**必须**先通过 `isBusinessError(err)` 判断，通过后再提示。禁止对任意错误无差别调用 `message.error(err.message)`。
+
+#### 分工表
+
+| 错误类型 | request.ts 处理 | 业务层（onError / try-catch） |
+|---|---|---|
+| 网络不通（code=0） | `globalNotification.error('网络连接失败')` | **禁止**再提示，静默即可 |
+| 401 未登录 | 自动刷新 token / 登出跳转 | **禁止**再提示 |
+| 403 无权限 | `globalNotification.error('无访问权限')` | **禁止**再提示 |
+| 500 服务器错误 | `globalNotification.error('服务器错误')` | **禁止**再提示 |
+| 其他业务错误（4xx，如 400 参数错误） | **不处理**，抛出 `ApiError` | **仅此类**可提示，且**必须**用 `isBusinessError(err)` 判断后再提示 |
+
+#### ❌ 错误写法（会导致重复提示）
+
+```typescript
+// 错误：对所有错误都 message，会和 request 全局提示重复
 onError: (err) => {
-  // 仅处理业务层错误，全局错误（403/500/网络）已由 request.ts 处理
-  if (err instanceof ApiError && ![0, 401, 403, 500].includes(err.code)) {
-    message.error(err.message)
+  message.error(err?.message ?? '操作失败')  // 403/500/网络错误已被全局提示，这里会再弹一次
+}
+
+// 错误：try-catch 里统一 message，同样会重复
+onFinish: async (values) => {
+  try {
+    await createMutation.mutateAsync(values)
+    return true
+  } catch (e) {
+    message.error((e as Error).message)  // 若为 403/500/网络，request 已提示过，这里重复
+    return false
   }
 }
 ```
 
+#### ✅ 正确写法（必须使用 isBusinessError）
+
+**useMutation 的 onError**：
+
+```typescript
+import { isBusinessError } from '@/utils/request'
+
+onError: (err: Error) => {
+  if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+}
+```
+
+**Drawer 内 setErrorMsg（表单项下方错误文案）**：
+
+```typescript
+import { isBusinessError } from '@/utils/request'
+
+const handleError = (err: Error) => {
+  if (isBusinessError(err)) setErrorMsg(err.message ?? '操作失败')
+}
+createMutation = useMutation({ ..., onError: handleError })
+```
+
+**try-catch（如权限页 loadRoles / save 等）**：
+
+```typescript
+import { isBusinessError } from '@/utils/request'
+
+try {
+  await PermissionApi.saveRolePermission(selectedRoleId, payload)
+  message.success('权限保存成功')
+} catch (err: unknown) {
+  if (isBusinessError(err)) message.error(err.message || '保存权限失败')
+} finally {
+  setSaving(false)
+}
+```
+
+**DrawerForm onFinish**：用 `mutateAsync` 时，依赖 mutation 的 `onError` 按上面方式（`isBusinessError`）处理即可，**不要在 catch 里再 message**：
+
+```typescript
+onFinish: async (values) => {
+  try {
+    await createMutation.mutateAsync(values)
+    return true
+  } catch {
+    return false  // 仅控制不关闭 Drawer；不要在这里 message.error()
+  }
+}
+```
+
+> 若不使用 `isBusinessError`，需自行判断：`err instanceof ApiError && ![0, 401, 403, 500].includes(err.code)`。**推荐统一使用 `isBusinessError`**，避免遗漏或与 request 全局逻辑不一致。
+
 ---
 
-### 11.7 缓存失效策略
+### 12.7 缓存失效策略
 
 ```typescript
 const queryClient = useQueryClient()
@@ -728,7 +885,7 @@ queryClient.setQueryData(['region', id], (old: RegionDto) => ({
 
 ---
 
-### 11.8 ProTable + React Query 组合模式
+### 12.8 ProTable + React Query 组合模式
 
 当 ProTable 的外部依赖数据（如选择器选项）需要缓存时，混合使用：
 
@@ -768,9 +925,9 @@ const MyPage: React.FC = () => {
 
 ---
 
-## 十二、服务层（services）代码规范
+## 十三、服务层（services）代码规范
 
-### 12.1 文件位置与命名
+### 13.1 文件位置与命名
 
 ```
 src/services/
@@ -782,7 +939,7 @@ src/services/
 └── permission.ts   # 权限
 ```
 
-### 12.2 服务函数模板
+### 13.2 服务函数模板
 
 ```typescript
 // src/services/region.ts
@@ -835,7 +992,7 @@ export const RegionApi = {
 
 ---
 
-## 十三、类型定义规范
+## 十四、类型定义规范
 
 ```
 src/types/
@@ -907,7 +1064,7 @@ export enum Gender {
 
 ---
 
-## 十四、各页面组件选型速查
+## 十五、各页面组件选型速查
 
 | 页面 | 主体组件 | 辅助组件 |
 |---|---|---|
@@ -921,4 +1078,4 @@ export enum Gender {
 
 *本文档随项目迭代持续更新，新增页面开发前必须阅读。*
 
-*最后更新：2026-03-02*
+*最后更新：2026-03-06*

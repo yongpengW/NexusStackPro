@@ -14,6 +14,7 @@ import {
 } from 'antd'
 import { ExpandAltOutlined, ShrinkOutlined } from '@ant-design/icons'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { MenuApi, type MenuDto, type MenuResourceDto } from '@/services/menu'
 import { MENU_QUERY_KEYS } from './useMenu'
 
@@ -153,7 +154,9 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
       setErrorMsg(null)
       onClose()
     },
-    onError: (err: Error) => setErrorMsg(err.message ?? '保存失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) setErrorMsg(err.message ?? '保存失败')
+    },
   })
 
   const title = `绑定接口：${menu?.name ?? ''}`

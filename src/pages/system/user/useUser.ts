@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { App } from 'antd'
 import { useMutation } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { UserApi } from '@/services/user'
 import type { UserDto } from '@/services/user'
 
@@ -14,7 +15,9 @@ export function useUser(reload: () => void) {
       message.success('已启用')
       reload()
     },
-    onError: (err: Error) => message.error(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -24,7 +27,9 @@ export function useUser(reload: () => void) {
       message.success('已禁用')
       reload()
     },
-    onError: (err: Error) => message.error(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -34,7 +39,9 @@ export function useUser(reload: () => void) {
       message.success('密码已重置为手机号后6位')
       reload()
     },
-    onError: (err: Error) => message.error(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -44,7 +51,9 @@ export function useUser(reload: () => void) {
       message.success('删除成功')
       reload()
     },
-    onError: (err: Error) => message.error(err.message ?? '删除失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '删除失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 

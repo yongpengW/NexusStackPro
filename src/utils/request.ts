@@ -47,6 +47,11 @@ export class ApiError extends Error {
   }
 }
 
+/** 是否为由业务层自行提示的错误（0/401/403/500 已由 request 全局提示，无需再 message） */
+export function isBusinessError(err: unknown): err is ApiError {
+  return err instanceof ApiError && ![0, 401, 403, 500].includes(err.code)
+}
+
 // ─── Token 刷新队列（处理并发 401） ──────────────────────────────────────────
 
 /** 是否正在刷新中，防止并发触发多次刷新 */

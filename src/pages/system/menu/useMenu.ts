@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { App } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { MenuApi } from '@/services/menu'
 import type { MenuTreeDto, MenuDto } from '@/services/menu'
 
@@ -34,7 +35,9 @@ export function useMenu(platformType: number) {
       message.success('删除成功')
       refresh()
     },
-    onError: (err: Error) => message.error(err.message ?? '删除失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '删除失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 

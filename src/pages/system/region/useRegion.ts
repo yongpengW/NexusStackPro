@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { App } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { RegionApi } from '@/services/region'
 import type { RegionTreeDto, RegionDto } from '@/services/region'
 
@@ -39,7 +40,9 @@ export function useRegion() {
       message.success('已启用')
       refresh()
     },
-    onError: (err: Error) => message.error(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -50,7 +53,9 @@ export function useRegion() {
       message.success('已禁用')
       refresh()
     },
-    onError: (err: Error) => message.error(err.message ?? '操作失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '操作失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 
@@ -61,7 +66,9 @@ export function useRegion() {
       message.success('删除成功')
       refresh()
     },
-    onError: (err: Error) => message.error(err.message ?? '删除失败'),
+    onError: (err: Error) => {
+      if (isBusinessError(err)) message.error(err.message ?? '删除失败')
+    },
     onSettled: () => setOperatingId(null),
   })
 

@@ -14,6 +14,7 @@ import {
   Tag,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import {
   RoleApi,
   PLATFORM_OPTIONS,
@@ -86,7 +87,9 @@ export function RoleDrawer({ open, editId, onClose, onSuccess }: RoleDrawerProps
     queryClient.invalidateQueries({ queryKey: ROLE_QUERY_KEYS.detail(editId ?? 0) })
     onSuccess()
   }
-  const handleMutationError = (err: Error) => setErrorMsg(err.message ?? '操作失败')
+  const handleMutationError = (err: Error) => {
+    if (isBusinessError(err)) setErrorMsg(err.message ?? '操作失败')
+  }
 
   const createMutation = useMutation({
     mutationFn: (data: CreateRoleDto) => RoleApi.create(data),

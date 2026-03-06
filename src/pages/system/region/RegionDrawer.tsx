@@ -13,6 +13,7 @@ import {
   Spin,
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { isBusinessError } from '@/utils/request'
 import { RegionApi, RegionLevel, RegionLevelLabels } from '@/services/region'
 import { REGION_QUERY_KEYS } from './useRegion'
 import type { RegionTreeDto, CreateRegionDto } from '@/services/region'
@@ -107,7 +108,9 @@ export function RegionDrawer({
     queryClient.invalidateQueries({ queryKey: ['region'] })
     onSuccess()
   }
-  const onMutationError = (err: Error) => setErrorMsg(err.message ?? '操作失败')
+  const onMutationError = (err: Error) => {
+    if (isBusinessError(err)) setErrorMsg(err.message ?? '操作失败')
+  }
 
   const createMutation = useMutation({
     mutationFn: (data: CreateRegionDto) => RegionApi.create(data),
