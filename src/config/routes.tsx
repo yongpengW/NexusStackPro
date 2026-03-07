@@ -16,10 +16,11 @@ function buildIcon(
   node: MenuTreeDto,
   iconsModule: Record<string, ComponentType> | null,
 ): ReactNode | undefined {
-  if (!node.icon) return undefined
+  const icon = node.icon?.trim() ?? ''
+  if (!icon) return undefined
 
   if (node.iconType === MenuIconType.Picture) {
-    return <img src={node.icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />
+    return <img src={icon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} />
   }
 
   if (!iconsModule) {
@@ -38,7 +39,7 @@ function buildIcon(
     )
   }
 
-  const IconComp = iconsModule[node.icon]
+  const IconComp = iconsModule[icon]
   if (!IconComp) return undefined
 
   return <IconComp />
