@@ -16,6 +16,7 @@ import HeaderDropdown from '../HeaderDropdown'
 export type AvatarDropdownProps = {
   menu?: boolean
   children?: React.ReactNode
+  showName?: boolean
 }
 
 export const AvatarName: React.FC = () => {
@@ -23,7 +24,7 @@ export const AvatarName: React.FC = () => {
   return <span>{userInfo?.userName ?? ''}</span>
 }
 
-export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu }) => {
+export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu, showName = true }) => {
   const navigate = useNavigate()
   const userInfo = useAppStore((s) => s.userInfo)
   const clearUserInfo = useAppStore((s) => s.logout)
@@ -107,7 +108,7 @@ export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu }) => {
           icon={<UserOutlined />}
           alt={userInfo.userName}
         />
-        <span>{userInfo.userName}</span>
+        {showName && <span>{userInfo.userName}</span>}
       </span>
     </HeaderDropdown>
   )

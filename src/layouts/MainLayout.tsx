@@ -16,6 +16,7 @@ const MainLayout: React.FC = () => {
   const setIconsModule = useAppStore((s) => s.setIconsModule)
   const route = useMenuRoutes()
   const [layoutMode, setLayoutMode] = useState<'mix' | 'side' | 'top'>('mix')
+  const [collapsed, setCollapsed] = useState(false)
 
   // 懒加载 @ant-design/icons：进入主布局后再拉取，首屏主包不包含整包 icons
   useEffect(() => {
@@ -46,6 +47,8 @@ const MainLayout: React.FC = () => {
       location={{ pathname: location.pathname }}
       fixedHeader
       fixSiderbar
+      collapsed={collapsed}
+      onCollapse={setCollapsed}
       menu={{ locale: false }}
       onMenuHeaderClick={() => navigate('/')}
       menuItemRender={(item, dom) => {
@@ -78,8 +81,11 @@ const MainLayout: React.FC = () => {
         src: userInfo?.avatar,
         title: <AvatarName />,
         size: 'small',
-        render: (_, avatarChildren) => (
-          <AvatarDropdown menu>{avatarChildren}</AvatarDropdown>
+        render: () => (
+          <AvatarDropdown
+            menu
+            showName={!(layoutMode === 'side' && collapsed)}
+          />
         ),
       }}
       actionsRender={() => [
