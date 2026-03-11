@@ -15,7 +15,10 @@ const MainLayout: React.FC = () => {
   const iconsModule = useAppStore((s) => s.iconsModule)
   const setIconsModule = useAppStore((s) => s.setIconsModule)
   const route = useMenuRoutes()
-  const [layoutMode, setLayoutMode] = useState<'mix' | 'side' | 'top'>('mix')
+  const [layoutMode, setLayoutMode] = useState<'mix' | 'side' | 'top'>(() => {
+    const stored = localStorage.getItem('app_layout_mode') as 'mix' | 'side' | 'top' | null
+    return stored ?? 'mix'
+  })
   const [collapsed, setCollapsed] = useState(false)
 
   // 懒加载 @ant-design/icons：进入主布局后再拉取，首屏主包不包含整包 icons
@@ -25,6 +28,11 @@ const MainLayout: React.FC = () => {
       setIconsModule(m as unknown as Record<string, ComponentType>)
     })
   }, [iconsModule, setIconsModule])
+
+  // 持久化布局模式到 localStorage，刷新后保持用户选择
+  useEffect(() => {
+    localStorage.setItem('app_layout_mode', layoutMode)
+  }, [layoutMode])
 
   return (
     <ProLayout
