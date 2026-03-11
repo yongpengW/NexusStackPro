@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import type { ComponentType } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { ProLayout } from '@ant-design/pro-components'
-import { BellOutlined, LayoutOutlined } from '@ant-design/icons'
-import { Badge, Dropdown } from 'antd'
+import { LayoutOutlined } from '@ant-design/icons'
+import { Dropdown } from 'antd'
 import { useAppStore } from '@/store/useAppStore'
-import { AvatarDropdown, AvatarName, Footer, Question, SelectLang } from '@/components'
+import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components'
 import { useMenuRoutes } from '@/config/routes'
 
 const MainLayout: React.FC = () => {
