@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+      // 关键依赖做去重，避免同包多份实例导致运行时异常
+      dedupe: ['@ant-design/colors', '@ant-design/fast-color', '@ant-design/icons'],
     },
 
     server: {
@@ -43,7 +45,6 @@ export default defineConfig(({ mode }) => {
           // 使用函数形式：便于为懒加载的 @ant-design/icons 等指定稳定 chunk 名，利于长期缓存
           manualChunks(id) {
             if (!id.includes('node_modules')) return
-            if (id.includes('@ant-design/icons')) return 'vendor-antd-icons'
             if (id.includes('node_modules/react-dom')) return 'vendor-react'
             if (id.includes('node_modules/react-router')) return 'vendor-react'
             if (id.includes('node_modules/react/')) return 'vendor-react'
