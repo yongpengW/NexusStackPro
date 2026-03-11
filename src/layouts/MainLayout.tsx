@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { ComponentType } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { ProLayout } from '@ant-design/pro-components'
-import { BellOutlined } from '@ant-design/icons'
-import { Badge } from 'antd'
+import { BellOutlined, LayoutOutlined } from '@ant-design/icons'
+import { Badge, Dropdown } from 'antd'
 import { useAppStore } from '@/store/useAppStore'
 import { AvatarDropdown, AvatarName, Footer, Question, SelectLang } from '@/components'
 import { useMenuRoutes } from '@/config/routes'
@@ -15,6 +15,7 @@ const MainLayout: React.FC = () => {
   const iconsModule = useAppStore((s) => s.iconsModule)
   const setIconsModule = useAppStore((s) => s.setIconsModule)
   const route = useMenuRoutes()
+  const [layoutMode, setLayoutMode] = useState<'mix' | 'side' | 'top'>('mix')
 
   // 懒加载 @ant-design/icons：进入主布局后再拉取，首屏主包不包含整包 icons
   useEffect(() => {
@@ -40,7 +41,7 @@ const MainLayout: React.FC = () => {
           </span>
         </div>
       )}
-      layout="mix"
+      layout={layoutMode}
       route={route}
       location={{ pathname: location.pathname }}
       fixedHeader
@@ -82,11 +83,26 @@ const MainLayout: React.FC = () => {
         ),
       }}
       actionsRender={() => [
-        <Question key="question" />,
+        <Dropdown
+          key="layout-switch"
+          trigger={['click']}
+          menu={{
+            selectedKeys: [layoutMode],
+            onClick: ({ key }) => setLayoutMode(key as 'mix' | 'side' | 'top'),
+            items: [
+              { key: 'side', label: '右侧导航' },
+              { key: 'top', label: '顶部导航' },
+              { key: 'mix', label: '混合模式' },
+            ],
+          }}
+        >
+          <LayoutOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
+        </Dropdown>,
+        //<Question key="question" />,
         <SelectLang key="lang" />,
-        <Badge key="bell" count={5} size="small">
-          <BellOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
-        </Badge>,
+        //<Badge key="bell" count={5} size="small">
+          //<BellOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
+        //</Badge>,
       ]}
       footerRender={() => <Footer />}
       bgLayoutImgList={[
