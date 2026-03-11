@@ -1,4 +1,4 @@
-import type { ActionType, ProColumns } from '@ant-design/pro-components'
+import type { ActionType, ProColumns, ProDescriptionsItemProps } from '@ant-design/pro-components'
 import {
   FooterToolbar,
   PageContainer,
@@ -140,6 +140,12 @@ const RuleListPage: React.FC = () => {
     },
   ]
 
+  const descriptionColumns: ProDescriptionsItemProps<RuleItem>[] = columns
+    .filter((c) => c.dataIndex !== 'option')
+    // ProTable 的列定义与 ProDescriptions 的 item 定义大体兼容，但类型并不完全一致
+    // 这里做一次收敛转换，避免把 "option" 这种仅表格用的列传入详情描述组件
+    .map((c) => c as unknown as ProDescriptionsItemProps<RuleItem>)
+
   return (
     <PageContainer>
       <ProTable<RuleItem>
@@ -226,7 +232,7 @@ const RuleListPage: React.FC = () => {
           <ProDescriptions<RuleItem>
             column={1}
             dataSource={currentRow}
-            columns={columns as ProColumns<RuleItem>[]}
+            columns={descriptionColumns}
           />
         )}
       </Drawer>
