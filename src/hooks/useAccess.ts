@@ -1,12 +1,7 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useAppStore } from '@/store/useAppStore'
-import { PermissionApi, type RolePermissionDto } from '@/services/permission'
-import { PlatformType } from '@/services/role'
-import { MenuType } from '@/services/menu'
 
 export interface AccessResult {
-  /** 是否正在加载当前用户权限数据 */
+  /** 是否正在加载当前用户权限数据（未初始化前视为 loading） */
   loading: boolean
   /** 是否已经尝试加载过一次（即使失败） */
   initialized: boolean
@@ -25,65 +20,17 @@ export interface AccessResult {
   hasAllMenus: (codes: string[]) => boolean
 }
 
-function flattenPermissions(list: RolePermissionDto[]): RolePermissionDto[] {
-  const result: RolePermissionDto[] = []
-
-  const walk = (nodes: RolePermissionDto[]) => {
-    for (const n of nodes) {
-      result.push(n)
-      if (n.children?.length) {
-        walk(n.children)
-      }
-    }
-  }
-
-  walk(list)
-  return result
-}
-
 /**
- * useAccess：基于后端 /Token/permission 接口的前端权限 Hook。
+ * useAccess：基于 useAppStore 中的权限状态的前端权限 Hook。
  *
- * - 依赖登录态（access token），仅在已登录时请求当前用户菜单权限；
- * - 默认针对 PC 管理端平台（PlatformType.Pc = 2）加载权限树；
+ * - 权限数据由上层（如 AuthGuard）在登录后通过 /Token/permission 拉取并写入 Store；
+ * - Hook 本身只做读取与布尔判断封装，不再触发网络请求；
  * - 返回一组基于 Menu.Code 的布尔判断方法，供路由/菜单/按钮使用。
  */
 export function useAccess(): AccessResult {
-  const token = useAppStore((s) => s.token)
-
-  // 当前前端为 PC 管理端，对应后端 PlatformType.Pc = 2。
-  const platformType = PlatformType.Pc
-
-  const { data, isLoading, isFetched } = useQuery({
-    queryKey: ['currentUserPermission', platformType],
-    queryFn: () => PermissionApi.getCurrentUserPermission(platformType),
-    enabled: !!token,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const { menuCodes, operationCodes } = useMemo(() => {
-    if (!data || data.length === 0) {
-      return { menuCodes: [] as string[], operationCodes: [] as string[] }
-    }
-
-    const all = flattenPermissions(data)
-    const allCodes = new Set<string>()
-    const opCodes = new Set<string>()
-
-    for (const item of all) {
-      if (item.menuCode) {
-        allCodes.add(item.menuCode)
-        if (item.type === MenuType.Operation) {
-          opCodes.add(item.menuCode)
-        }
-      }
-    }
-
-    return {
-      menuCodes: Array.from(allCodes),
-      operationCodes: Array.from(opCodes),
-    }
-  }, [data])
+  const initialized = useAppStore((s) => s.accessInitialized)
+  const menuCodes = useAppStore((s) => s.accessMenuCodes)
+  const operationCodes = useAppStore((s) => s.accessOperationCodes)
 
   const hasMenu = (code: string) => menuCodes.includes(code)
   const hasOperation = (code: string) => operationCodes.includes(code)
@@ -91,8 +38,8 @@ export function useAccess(): AccessResult {
   const hasAllMenus = (codes: string[]) => codes.every((c) => hasMenu(c))
 
   return {
-    loading: isLoading,
-    initialized: isFetched,
+    loading: !initialized,
+    initialized,
     menuCodes,
     operationCodes,
     hasMenu,

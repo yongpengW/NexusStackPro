@@ -34,6 +34,13 @@ interface AppState {
   /** 懒加载的 @ant-design/icons 模块，用于动态菜单图标 */
   iconsModule: Record<string, ComponentType> | null
 
+  /** 当前用户在该平台下拥有的全部菜单 Code（含目录/菜单/操作） */
+  accessMenuCodes: string[]
+  /** 仅 Operation 类型节点的菜单 Code（推荐用于按钮级权限） */
+  accessOperationCodes: string[]
+  /** 是否已经尝试加载过一次权限（即使失败） */
+  accessInitialized: boolean
+
   setLoading: (loading: boolean) => void
   /** 设置是否自动登录 */
   setRememberMe: (remember: boolean) => void
@@ -43,6 +50,8 @@ interface AppState {
   setMenus: (menus: MenuTreeDto[]) => void
   /** 设置懒加载的 icons 模块（由 MainLayout 等触发 import 后写入） */
   setIconsModule: (m: Record<string, ComponentType> | null) => void
+  /** 设置当前用户权限（由 /Token/permission 计算后写入） */
+  setAccessPermissions: (payload: { menuCodes: string[]; operationCodes: string[] }) => void
   /** 登出：清空状态与 localStorage */
   logout: () => void
 }
@@ -72,6 +81,9 @@ export const useAppStore = create<AppState>()(
       refreshToken: initialRememberMe ? localStorage.getItem(REFRESH_TOKEN_KEY) : null,
       menus: [],
       iconsModule: null,
+      accessMenuCodes: [],
+      accessOperationCodes: [],
+      accessInitialized: false,
 
       setLoading: (loading) => set({ loading }, false, 'setLoading'),
 
@@ -120,13 +132,34 @@ export const useAppStore = create<AppState>()(
 
       setIconsModule: (iconsModule) => set({ iconsModule }, false, 'setIconsModule'),
 
+      setAccessPermissions: ({ menuCodes, operationCodes }) =>
+        set(
+          {
+            accessMenuCodes: menuCodes,
+            accessOperationCodes: operationCodes,
+            accessInitialized: true,
+          },
+          false,
+          'setAccessPermissions',
+        ),
+
       logout: () => {
         localStorage.removeItem(TOKEN_KEY)
         localStorage.removeItem(REFRESH_TOKEN_KEY)
         localStorage.removeItem(USER_INFO_KEY)
         localStorage.removeItem(REMEMBER_ME_KEY)
         set(
-          { userInfo: null, token: null, refreshToken: null, rememberMe: false },
+          {
+            userInfo: null,
+            token: null,
+            refreshToken: null,
+            rememberMe: false,
+            menus: [],
+            iconsModule: null,
+            accessMenuCodes: [],
+            accessOperationCodes: [],
+            accessInitialized: false,
+          },
           false,
           'logout',
         )
