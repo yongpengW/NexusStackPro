@@ -1,7 +1,7 @@
 import type { ReactNode, ComponentType } from 'react'
 import { MenuIconType, MenuTreeDto, MenuType } from '@/services/menu'
 import { useAppStore } from '@/store/useAppStore'
-import { t } from 'i18next'
+import { useTranslation } from 'react-i18next'
 
 export interface MenuRouteItem {
   path: string
@@ -48,6 +48,7 @@ function buildIcon(
 function mapMenuTreeToRoutes(
   nodes: MenuTreeDto[],
   iconsModule: Record<string, ComponentType> | null,
+  t: (key: string) => string,
 ): MenuRouteItem[] {
   const walk = (node: MenuTreeDto): MenuRouteItem | null => {
     // 只把 子系统/目录/菜单 转成路由，操作按钮不在菜单里展示
@@ -84,11 +85,13 @@ function mapMenuTreeToRoutes(
 }
 
 export const useMenuRoutes = () => {
+  // 使用 useTranslation 订阅语言变化，确保切换语言后菜单名称能重新计算
+  const { t } = useTranslation()
   const menuTree = useAppStore((s) => s.menus)
   const iconsModule = useAppStore((s) => s.iconsModule)
 
   return {
     path: '/',
-    routes: mapMenuTreeToRoutes(menuTree, iconsModule),
+    routes: mapMenuTreeToRoutes(menuTree, iconsModule, t),
   }
 }
