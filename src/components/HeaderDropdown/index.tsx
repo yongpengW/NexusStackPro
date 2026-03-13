@@ -8,7 +8,7 @@ export type HeaderDropdownProps = {
 } & Omit<DropDownProps, 'overlay'>
 
 const HeaderDropdown: React.FC<HeaderDropdownProps> = ({ overlayClassName, ...restProps }) => {
-  return <Dropdown overlayClassName={overlayClassName} {...restProps} />
+  return <Dropdown arrow overlayClassName={overlayClassName} {...restProps} />
 }
 
 export default HeaderDropdown

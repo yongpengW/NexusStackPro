@@ -1,4 +1,4 @@
-﻿import { QuestionCircleOutlined, GlobalOutlined } from '@ant-design/icons'
+import { QuestionCircleOutlined, GlobalOutlined } from '@ant-design/icons'
 import { Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 import React from 'react'
@@ -48,6 +48,7 @@ export const SelectLang: React.FC = () => {
 
   return (
     <Dropdown
+      arrow
       menu={{
         items,
         selectedKeys: [current],

@@ -2,9 +2,9 @@
 import '@ant-design/v5-patch-for-react-19'
 import '@/locales/i18n'
 import '@/utils/dateUtils' // 全局初始化 dayjs 插件（utc / timezone / relativeTime）
-import { StrictMode, useEffect } from 'react'
+import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ConfigProvider, App as AntdApp } from 'antd'
+import { ConfigProvider, App as AntdApp, theme as antdTheme } from 'antd'
 import type { Locale } from 'antd/es/locale'
 import antdZhCN from 'antd/locale/zh_CN'
 import antdEnUS from 'antd/locale/en_US'
@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { router } from '@/router'
+import { useAppStore } from '@/store/useAppStore'
 import { setupGlobalApp } from '@/utils/globalApp'
 import { ErrorBoundary } from '@/components'
 import './index.css'
@@ -57,7 +58,29 @@ const GlobalAppSetup: React.FC = () => {
 
 const Root = () => {
   const { i18n } = useTranslation()
+  const themeMode = useAppStore((s) => s.themeMode)
   const locale = antdLocaleMap[i18n.language] ?? antdZhCN
+
+  const [prefersDark, setPrefersDark] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return
+    }
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersDark(e.matches)
+    }
+    setPrefersDark(mql.matches)
+    mql.addEventListener('change', handleChange)
+    return () => mql.removeEventListener('change', handleChange)
+  }, [])
+
+  const isDark = themeMode === 'dark' || (themeMode === 'system' && prefersDark)
+  const algorithms = [isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm]
+  if (themeMode === 'compact') {
+    algorithms.push(antdTheme.compactAlgorithm)
+  }
 
   return (
     <ConfigProvider
@@ -66,6 +89,7 @@ const Root = () => {
         token: {
           colorPrimary: '#1677ff',
         },
+        algorithm: algorithms,
       }}
     >
       <AntdApp>

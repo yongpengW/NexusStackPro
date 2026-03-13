@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import type { ComponentType } from 'react'
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom'
 import { ProLayout } from '@ant-design/pro-components'
-import { LayoutOutlined } from '@ant-design/icons'
-import { Dropdown } from 'antd'
-import { useAppStore } from '@/store/useAppStore'
+import { LayoutOutlined, SyncOutlined, SunOutlined, MoonOutlined, CompressOutlined } from '@ant-design/icons'
+import { Dropdown, Tooltip } from 'antd'
+import { useAppStore, type ThemeMode } from '@/store/useAppStore'
 import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components'
+import IconFont from '@/components/IconFont'
 import { useMenuRoutes } from '@/config/routes'
 
 const MainLayout: React.FC = () => {
@@ -14,6 +15,8 @@ const MainLayout: React.FC = () => {
   const userInfo = useAppStore((s) => s.userInfo)
   const iconsModule = useAppStore((s) => s.iconsModule)
   const setIconsModule = useAppStore((s) => s.setIconsModule)
+  const themeMode = useAppStore((s) => s.themeMode)
+  const setThemeMode = useAppStore((s) => s.setThemeMode)
   const route = useMenuRoutes()
   const [layoutMode, setLayoutMode] = useState<'mix' | 'side' | 'top'>(() => {
     const stored = localStorage.getItem('app_layout_mode') as 'mix' | 'side' | 'top' | null
@@ -97,27 +100,78 @@ const MainLayout: React.FC = () => {
         ),
       }}
       actionsRender={() => [
-        <Dropdown
-          key="layout-switch"
-          trigger={['click']}
-          menu={{
-            selectedKeys: [layoutMode],
-            onClick: ({ key }) => setLayoutMode(key as 'mix' | 'side' | 'top'),
-            items: [
-              { key: 'side', label: '右侧导航' },
-              { key: 'top', label: '顶部导航' },
-              { key: 'mix', label: '混合模式' },
-            ],
-          }}
-        >
-          <LayoutOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
-        </Dropdown>,
-        //<Question key="question" />,
-        <SelectLang key="lang" />,
-        //<Badge key="bell" count={5} size="small">
+          <Dropdown
+            key="layout-switch"
+            arrow
+            menu={{
+              selectedKeys: [layoutMode],
+              onClick: ({ key }) => setLayoutMode(key as 'mix' | 'side' | 'top'),
+              items: [
+                { key: 'side', label: '右侧导航' },
+                { key: 'top', label: '顶部导航' },
+                { key: 'mix', label: '混合模式' },
+              ],
+            }}
+          >
+            <LayoutOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
+          </Dropdown>,
+          <Dropdown
+            key="theme-switch"
+            arrow
+            menu={{
+              selectedKeys: [themeMode],
+              onClick: ({ key }) => setThemeMode(key as ThemeMode),
+              items: [
+                {
+                  key: 'system',
+                  label: (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <SyncOutlined />
+                      <span>跟随系统</span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'light',
+                  label: (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <SunOutlined />
+                      <span>浅色主题</span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'dark',
+                  label: (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <MoonOutlined />
+                      <span>暗黑主题</span>
+                    </span>
+                  ),
+                },
+                {
+                  type: 'divider',
+                },
+                {
+                  key: 'compact',
+                  label: (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CompressOutlined />
+                      <span>紧凑模式</span>
+                    </span>
+                  ),
+                },
+              ],
+            }}
+          >
+            <IconFont type="icon-theme" style={{ fontSize: 18, cursor: 'pointer' }} />
+          </Dropdown>,
+          //<Question key="question" />,
+          <SelectLang key="lang" />,
+          //<Badge key="bell" count={5} size="small">
           //<BellOutlined style={{ fontSize: 16, cursor: 'pointer' }} />
-        //</Badge>,
-      ]}
+          //</Badge>,
+        ]}
       footerRender={() => <Footer />}
       bgLayoutImgList={[
         {

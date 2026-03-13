@@ -12,6 +12,8 @@ const REMEMBER_ME_KEY = 'remember_me'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type ThemeMode = 'system' | 'light' | 'dark' | 'compact'
+
 export type UserInfo = Pick<LoginResult, 'userId' | 'userName' | 'email'> & {
   /** 头像 URL，由后端扩展字段或个人设置填充 */
   avatar?: string
@@ -41,6 +43,10 @@ interface AppState {
   /** 是否已经尝试加载过一次权限（即使失败） */
   accessInitialized: boolean
 
+  /** 主题模式：system / light / dark / compact */
+  themeMode: ThemeMode
+
+
   setLoading: (loading: boolean) => void
   /** 设置是否自动登录 */
   setRememberMe: (remember: boolean) => void
@@ -52,6 +58,8 @@ interface AppState {
   setIconsModule: (m: Record<string, ComponentType> | null) => void
   /** 设置当前用户权限（由 /Token/permission 计算后写入） */
   setAccessPermissions: (payload: { menuCodes: string[]; operationCodes: string[] }) => void
+  /** 设置主题模式 */
+  setThemeMode: (mode: ThemeMode) => void
   /** 登出：清空状态与 localStorage */
   logout: () => void
 }
@@ -70,6 +78,8 @@ function restoreUserInfo(): UserInfo | null {
 // ─── Store ───────────────────────────────────────────────────────────────────
 
 const initialRememberMe = localStorage.getItem(REMEMBER_ME_KEY) === '1'
+const THEME_MODE_KEY = 'app_theme_mode'
+const initialThemeMode = (localStorage.getItem(THEME_MODE_KEY) as ThemeMode | null) ?? 'system'
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -84,6 +94,7 @@ export const useAppStore = create<AppState>()(
       accessMenuCodes: [],
       accessOperationCodes: [],
       accessInitialized: false,
+      themeMode: initialThemeMode,
 
       setLoading: (loading) => set({ loading }, false, 'setLoading'),
 
@@ -142,6 +153,11 @@ export const useAppStore = create<AppState>()(
           false,
           'setAccessPermissions',
         ),
+
+      setThemeMode: (mode) => {
+        localStorage.setItem(THEME_MODE_KEY, mode)
+        set({ themeMode: mode }, false, 'setThemeMode')
+      },
 
       logout: () => {
         localStorage.removeItem(TOKEN_KEY)
