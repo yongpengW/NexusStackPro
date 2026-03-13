@@ -2,7 +2,7 @@
 
 <div align="center">
 
-🖥️ **一个开箱即用的现代化中台前端管理系统模板**
+🖥️ **一个开箱即用的现代化中后台前端管理系统模板**
 
 与 [NexusStack](https://github.com/yongpengW/NexusStack) .NET 10 微服务后台配套使用
 
