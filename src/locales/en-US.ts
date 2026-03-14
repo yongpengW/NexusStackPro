@@ -66,6 +66,7 @@ const enUS = {
   'pages.login.phoneLogin.getVerificationCode': 'Get Code',
   'pages.getCaptchaSecondText': 's to retry',
   'pages.login.rememberMe': 'Auto login',
+  'pages.login.rememberPassword': 'Remember password',
   'pages.login.forgotPassword': 'Forgot password',
   'pages.login.forgotPasswordTip': 'Please contact the administrator to reset your password',
   'pages.login.loginWith': 'Other login methods',

@@ -161,29 +161,33 @@ function AccountSettingsPage() {
                   </div>
                 </div>
                 <Divider />
-                {/* 仅在 me 就绪后渲染表单，使 initialValues 在挂载时即生效，避免 ProForm 的 async initialValues 警告 */}
-                {me ? (
-                  <ProForm<{
-                    userName: string
-                    realName?: string
-                    nickName?: string
-                    mobile: string
-                    email?: string
-                    gender?: Gender
-                    remark?: string
-                  }>
-                    key={me.id}
-                    form={profileForm}
-                    initialValues={{
-                      userName: me.userName,
-                      realName: me.realName,
-                      nickName: me.nickName,
-                      mobile: me.mobile,
-                      email: me.email,
-                      gender: me.gender ?? Gender.Unknown,
-                      remark: (me as CurrentUserDto & { remark?: string })?.remark ?? undefined,
-                    }}
-                    onFinish={async (values) => {
+                {/* 始终渲染 ProForm 并传入 form，避免 useForm 实例未挂载到 Form 的警告（me 未就绪时由 Spin 遮挡） */}
+                <ProForm<{
+                  userName: string
+                  realName?: string
+                  nickName?: string
+                  mobile: string
+                  email?: string
+                  gender?: Gender
+                  remark?: string
+                }>
+                  key={me?.id ?? 'loading'}
+                  form={profileForm}
+                  initialValues={
+                    me
+                      ? {
+                          userName: me.userName,
+                          realName: me.realName,
+                          nickName: me.nickName,
+                          mobile: me.mobile,
+                          email: me.email,
+                          gender: me.gender ?? Gender.Unknown,
+                          remark: (me as CurrentUserDto & { remark?: string })?.remark ?? undefined,
+                        }
+                      : {}
+                  }
+                  onFinish={async (values) => {
+                      if (!me) return false
                       const payload: CreateUserDto = {
                         userName: me.userName,
                         realName: values.realName,
@@ -208,12 +212,12 @@ function AccountSettingsPage() {
                         return false
                       }
                     }}
-                    submitter={{
-                      searchConfig: { submitText: '保存修改' },
-                      submitButtonProps: { loading: updateMeMutation.isPending },
-                    }}
-                  >
-                    <ProForm.Group>
+                  submitter={{
+                    searchConfig: { submitText: '保存修改' },
+                    submitButtonProps: { loading: updateMeMutation.isPending, disabled: !me },
+                  }}
+                >
+                  <ProForm.Group>
                       <ProFormText name="userName" label="账号" width="md" disabled />
                       <ProFormText name="realName" label="真实姓名" width="md" />
                     </ProForm.Group>
@@ -241,8 +245,7 @@ function AccountSettingsPage() {
                       <ProFormText name="email" label="邮箱" width="md" />
                     </ProForm.Group>
                     <ProFormTextArea name="remark" label="个人简介" width="xl" />
-                  </ProForm>
-                ) : null}
+                </ProForm>
               </Spin>
             </>
           )}

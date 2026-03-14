@@ -23,6 +23,31 @@ import './index.css'
 
 type LoginType = 'account' | 'mobile'
 
+const LOGIN_REMEMBER_CREDENTIALS_KEY = 'login_remember_credentials'
+
+function getSavedCredentials(): Partial<{ username: string; password: string; rememberPassword: boolean }> {
+  try {
+    const raw = localStorage.getItem(LOGIN_REMEMBER_CREDENTIALS_KEY)
+    if (!raw) return {}
+    const { username, password } = JSON.parse(raw) as { username?: string; password?: string }
+    if (!username) return {}
+    return { username, password: password ?? '', rememberPassword: true }
+  } catch {
+    return {}
+  }
+}
+
+function saveCredentials(username: string, password: string) {
+  localStorage.setItem(
+    LOGIN_REMEMBER_CREDENTIALS_KEY,
+    JSON.stringify({ username, password }),
+  )
+}
+
+function clearSavedCredentials() {
+  localStorage.removeItem(LOGIN_REMEMBER_CREDENTIALS_KEY)
+}
+
 const encodePasswordToBase64 = (password: string) => {
   if (!password) return ''
   const utf8Bytes = new TextEncoder().encode(password)
@@ -41,6 +66,7 @@ type LoginFormValues = {
   username: string
   password: string
   autoLogin?: boolean
+  rememberPassword?: boolean
   mobile?: string
   captcha?: string
 }
@@ -85,8 +111,14 @@ function LoginPage() {
 
   const handleSubmit = (values: LoginFormValues) => {
     setLoginError('')
-    const autoLogin = values.autoLogin ?? true
+    // 仅当用户勾选“自动登录”时为 true；未勾选时表单可能不提交该字段(undefined)，需按 false 处理
+    const autoLogin = values.autoLogin === true
     setRememberMe(autoLogin)
+    if (values.rememberPassword === true) {
+      saveCredentials(values.username, values.password)
+    } else {
+      clearSavedCredentials()
+    }
     const encodedPassword = encodePasswordToBase64(values.password)
     submitLogin({ userName: values.username, password: encodedPassword })
   }
@@ -109,7 +141,7 @@ function LoginPage() {
             </span>
           }
           subTitle={t('pages.login.subTitle')}
-          initialValues={{ autoLogin: true }}
+          initialValues={{ autoLogin: true, rememberPassword: false, ...getSavedCredentials() }}
           loading={isPending}
           onFinish={async (values) => {
             handleSubmit(values as LoginFormValues)
@@ -184,9 +216,14 @@ function LoginPage() {
           )}
 
           <div style={{ marginBottom: 24 }}>
-            <ProFormCheckbox noStyle name="autoLogin">
+            <ProFormCheckbox noStyle name="autoLogin" valuePropName="checked">
               {t('pages.login.rememberMe')}
             </ProFormCheckbox>
+            {loginType === 'account' && (
+              <ProFormCheckbox noStyle name="rememberPassword" valuePropName="checked" style={{ marginLeft: 16 }}>
+                {t('pages.login.rememberPassword')}
+              </ProFormCheckbox>
+            )}
             <a
               style={{ float: 'right' }}
               onClick={() => message.info(t('pages.login.forgotPasswordTip'))}
