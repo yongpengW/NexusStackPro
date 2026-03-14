@@ -21,7 +21,7 @@ const IconFontInner = createFromIconfontCN({
   scriptUrl: scriptUrl && scriptUrl.trim().length > 0 ? scriptUrl : undefined,
 })
 
-export interface IconFontProps extends React.ComponentProps<typeof IconFontInner> {}
+export type IconFontProps = React.ComponentProps<typeof IconFontInner>
 
 const IconFont: React.FC<IconFontProps> = (props) => {
   return <IconFontInner {...props} />

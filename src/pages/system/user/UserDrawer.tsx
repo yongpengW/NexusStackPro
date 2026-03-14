@@ -72,10 +72,10 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
         email: detail.email,
         gender: detail.gender,
         isEnable: detail.isEnable,
-        remark: undefined,
+        remark: detail.remark,
         roleIds: detail.userRoles?.map((r) => r.roleId) ?? [],
         departmentIds: detail.departments?.map((d) => d.departmentId) ?? [],
-      } as Partial<CreateUserDto & { roleIds: number[]; departmentIds: number[] }>)
+      } as unknown as Partial<CreateUserDto & { roleIds: number[]; departmentIds: number[] }>)
     } else if (!isEdit && open) {
       form.setFieldsValue({
         userName: undefined,

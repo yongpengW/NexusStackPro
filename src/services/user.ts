@@ -32,6 +32,7 @@ export interface UserDto {
   email: string
   gender: Gender
   avatar: string
+  remark: string
   isEnable: boolean
   hasPassword: boolean
   lastLoginTime: string
