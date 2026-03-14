@@ -31,8 +31,6 @@ function matchMenuCodeByPath(tree: MenuTreeDto[], pathname: string): string | nu
     for (const n of nodes) {
       if (n.isVisible && n.type !== MenuType.Operation) {
         const path = n.url || `/menu/${n.id}`
-        //console.log('path', path);
-        //console.log('pathname', pathname);
         if (pathname === path || pathname.startsWith(`${path}/`)) {
           const len = path.length
           if (len > bestPathLength) {
