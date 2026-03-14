@@ -1,10 +1,10 @@
-# NexusStackPro
+# Nexus Stack Pro
 
 <div align="center">
 
-🖥️ **一个开箱即用的现代化中后台前端管理系统模板**
+🖥️ **一个开箱即用的现代化UI前端管理系统模板**
 
-与 [NexusStack](https://github.com/yongpengW/NexusStack) .NET 10 微服务后台配套使用
+[NexusStack](https://github.com/yongpengW/NexusStack) .NET 10 企业微服务全栈解决方案
 
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
