@@ -12,7 +12,6 @@ import {
   DollarOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons'
-import React from 'react'
 
 const { Text } = Typography
 

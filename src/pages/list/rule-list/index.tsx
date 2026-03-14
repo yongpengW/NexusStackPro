@@ -7,7 +7,7 @@ import {
 } from '@ant-design/pro-components'
 import { Button, Drawer, Modal, App, Tag, Space } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 /** 规则状态枚举 */
 const StatusEnum = {

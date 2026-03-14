@@ -1,7 +1,6 @@
 import { EllipsisOutlined, PlusOutlined } from '@ant-design/icons'
 import { PageContainer } from '@ant-design/pro-components'
 import { Avatar, Button, Card, List, Typography } from 'antd'
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 const { Paragraph } = Typography

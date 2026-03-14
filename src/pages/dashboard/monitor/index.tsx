@@ -7,7 +7,7 @@ import {
   TrophyOutlined,
   FireOutlined,
 } from '@ant-design/icons'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 const { Timer } = Statistic

@@ -14,7 +14,7 @@ import {
   Segmented,
   Tag,
 } from 'antd'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 const { Search } = Input

@@ -11,7 +11,7 @@ import {
   ProFormTimePicker,
 } from '@ant-design/pro-components'
 import { Card, Col, message, Popover, Row } from 'antd'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface TableFormDateType {

@@ -1,7 +1,6 @@
 import type { ProColumns } from '@ant-design/pro-components'
 import { PageContainer, ProTable } from '@ant-design/pro-components'
 import { Badge, Button, Card, Descriptions, Divider } from 'antd'
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface BasicGood {

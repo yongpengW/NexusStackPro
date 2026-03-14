@@ -19,7 +19,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { isBusinessError } from '@/utils/request'
 import { UserApi, type CreateUserDto, type CurrentUserDto, Gender } from '@/services/user'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { formatDateTime } from '@/utils/dateUtils'
 
 const menuItems = [
