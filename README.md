@@ -8,7 +8,7 @@
 
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-7.x-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?logo=vite)](https://vitejs.dev/)
 [![Ant Design](https://img.shields.io/badge/Ant%20Design-5.29-0170FE?logo=antdesign)](https://ant.design/)
 [![许可证](https://img.shields.io/badge/许可证-MIT-green.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/yongpengW/NexusStackPro?style=social&label=NexusStackPro%20Stars)](https://github.com/yongpengW/NexusStackPro)
@@ -41,7 +41,7 @@
 |---|---|---|
 | React | 19.0.0 | 配合 `@ant-design/v5-patch-for-react-19` 兼容补丁 |
 | TypeScript | 5.9.x | 严格模式 |
-| Vite | 7.x | 构建工具，开发端口 5173 |
+| Vite | 8.x | 构建工具，开发端口 5173 |
 | Ant Design | 5.29.3 | UI 组件库 |
 | @ant-design/pro-components | 2.8.10 | ProLayout / ProTable / ProForm 等高级组件 |
 | react-router-dom | 7.x | `createBrowserRouter`，嵌套路由 |

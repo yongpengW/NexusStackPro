@@ -94,11 +94,11 @@ export default function UserPage() {
       search: false,
       render: (_, record) => (
         <Space size={4} wrap>
-          {record.userRoles?.map((ur) =>
+          {record.userRoles?.map((ur, urIndex) =>
             parsePlatformFlags(ur.platforms).map((p) => {
               const meta = PLATFORM_META[p]
               return meta ? (
-                <Tag key={`${ur.roleId}-${p}`} color={meta.color}>
+                <Tag key={`${record.id}-${ur.roleId}-${p}-${urIndex}`} color={meta.color}>
                   {ur.roleName}
                 </Tag>
               ) : null
