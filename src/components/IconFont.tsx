@@ -1,4 +1,4 @@
-import React from 'react'
+import type { ComponentProps } from 'react'
 import { createFromIconfontCN } from '@ant-design/icons'
 
 /**
@@ -21,9 +21,9 @@ const IconFontInner = createFromIconfontCN({
   scriptUrl: scriptUrl && scriptUrl.trim().length > 0 ? scriptUrl : undefined,
 })
 
-export type IconFontProps = React.ComponentProps<typeof IconFontInner>
+export type IconFontProps = ComponentProps<typeof IconFontInner>
 
-const IconFont: React.FC<IconFontProps> = (props) => {
+function IconFont(props: IconFontProps) {
   return <IconFontInner {...props} />
 }
 

@@ -9,7 +9,7 @@ import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components'
 import IconFont from '@/components/IconFont'
 import { useMenuRoutes } from '@/config/routes'
 
-const MainLayout: React.FC = () => {
+function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const userInfo = useAppStore((s) => s.userInfo)

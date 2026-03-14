@@ -48,7 +48,7 @@ const antdLocaleMap: Record<string, Locale> = {
  * 将 App.useApp() 实例注入到 globalApp，使其可在组件外（如 request.ts）使用
  * 必须是 <AntdApp> 的子组件才能正确获取带主题的实例
  */
-const GlobalAppSetup: React.FC = () => {
+function GlobalAppSetup() {
   const { message, notification } = AntdApp.useApp()
   useEffect(() => {
     setupGlobalApp(message, notification)

@@ -14,6 +14,36 @@
 4. **HTTP 工具**：使用项目封装的 `http`（`@/utils/request`），GET 参数用 `buildUrl` 工具函数拼接，POST/PUT body 直接传对象。
 5. **组件复用**：相同功能的状态 Tag、操作列 Dropdown、Drawer 标题逻辑须抽取为公共组件或 Hook，避免在每个页面重复实现。
 6. **错误提示不重复**：网络/401/403/500 等已由 `request.ts` 全局统一提示，**禁止**在业务代码里再次对上述错误调用 `message.error()` 或 `notification`，否则用户会看到**同一条错误被提示两次**。业务层**必须**使用 `@/utils/request` 导出的 **`isBusinessError(err)`** 判断后再提示（仅 `isBusinessError(err)` 为 `true` 时才可 `message.error` / `setErrorMsg`）。详见 **十二、12.6 节**。
+7. **组件写法**：**禁止**使用类组件（Class Component）与 **React.FC 类型写法**；**必须**使用**函数组件 + 显式 Props 类型**（函数声明或 `const Component = (props: Props) => {}`，Props 单独定义或内联）。唯一例外：错误边界等 React 官方规定必须使用 class 的场景（如 `ErrorBoundary`）可保留类组件。迁移说明见 **《React.FC 迁移至函数写法指南》**（`Docs/PRD/React-FC-Migration.md`）。
+
+### 1.1 组件写法规范（禁止 React.FC，必须函数写法）
+
+- **禁止**：`const X: React.FC = () => {}`、`const X: React.FC<Props> = (props) => {}`。
+- **必须**：使用函数声明或带显式参数类型的箭头函数，Props 单独定义或内联。
+
+**推荐写法示例：**
+
+```tsx
+// 无 props
+function WelcomePage() {
+  return <PageContainer>...</PageContainer>
+}
+
+// 有 props：接口单独定义
+interface TagListProps {
+  tags: TagItem[]
+}
+function TagList({ tags: initTags }: TagListProps) {
+  // ...
+}
+
+// 有 props：内联类型
+function IconText({ icon, text }: { icon: React.ReactNode; text: React.ReactNode }) {
+  return <span>{icon} {text}</span>
+}
+```
+
+**例外**：`ErrorBoundary` 等必须使用 `class Component` 的官方能力，保留类组件写法，不在此限制内。
 
 ---
 

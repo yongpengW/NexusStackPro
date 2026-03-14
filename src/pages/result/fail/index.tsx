@@ -1,9 +1,9 @@
-﻿import { CloseCircleOutlined, RightOutlined } from '@ant-design/icons'
+import { CloseCircleOutlined, RightOutlined } from '@ant-design/icons'
 import { GridContent } from '@ant-design/pro-components'
 import { Button, Card, Result } from 'antd'
 import { Link } from 'react-router-dom'
 
-const ResultFail: React.FC = () => {
+function ResultFail() {
   const content = (
     <>
       <div style={{ marginBottom: 16 }}>

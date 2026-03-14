@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Button, Card, Result } from 'antd'
 
-const Exception500: React.FC = () => (
+function Exception500() {
+  return (
   <Card variant="borderless">
     <Result
       status="500"
@@ -14,6 +15,7 @@ const Exception500: React.FC = () => (
       }
     />
   </Card>
-)
+  )
+}
 
 export default Exception500

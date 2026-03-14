@@ -2,7 +2,7 @@ import { Button, Card, Result } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
-const NotFoundPage: React.FC = () => {
+function NotFoundPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
 

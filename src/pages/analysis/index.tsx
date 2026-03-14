@@ -52,7 +52,7 @@ const salesData = [
   { label: '东北区', value: 21 },
 ]
 
-const AnalysisPage: React.FC = () => {
+function AnalysisPage() {
   return (
     <PageContainer
       title="数据分析"

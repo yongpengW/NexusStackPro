@@ -1,16 +1,17 @@
 import { PageContainer } from '@ant-design/pro-components'
 import { Card, theme } from 'antd'
-import React from 'react'
 
-/**
- * 单个说明卡片（与官方 Welcome 页面保持一致）
- */
-const InfoCard: React.FC<{
+interface InfoCardProps {
   title: string
   index: number
   desc: string
   href: string
-}> = ({ title, href, index, desc }) => {
+}
+
+/**
+ * 单个说明卡片（与官方 Welcome 页面保持一致）
+ */
+function InfoCard({ title, href, index, desc }: InfoCardProps) {
   const { token } = theme.useToken()
 
   return (
@@ -72,7 +73,7 @@ const InfoCard: React.FC<{
   )
 }
 
-const WelcomePage: React.FC = () => {
+function WelcomePage() {
   const { token } = theme.useToken()
 
   return (

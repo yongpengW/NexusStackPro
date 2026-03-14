@@ -68,7 +68,7 @@ const radarItems = [
   { name: '热度', value: 9 },
 ]
 
-const WorkplacePage: React.FC = () => {
+function WorkplacePage() {
   const { t } = useTranslation()
   return (
     <PageContainer

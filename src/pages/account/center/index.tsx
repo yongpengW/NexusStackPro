@@ -80,7 +80,11 @@ const projects = Array.from({ length: 8 }, (_, i) => ({
 // ─────────────────────────────────────────────
 interface TagItem { key: string; label: string }
 
-const TagList: React.FC<{ tags: TagItem[] }> = ({ tags: initTags }) => {
+interface TagListProps {
+  tags: TagItem[]
+}
+
+function TagList({ tags: initTags }: TagListProps) {
   const ref = useRef<InputRef | null>(null)
   const [tags, setTags] = useState<TagItem[]>(initTags)
   const [inputVisible, setInputVisible] = useState(false)
@@ -126,13 +130,16 @@ const TagList: React.FC<{ tags: TagItem[] }> = ({ tags: initTags }) => {
 // ─────────────────────────────────────────────
 // Tab 内容
 // ─────────────────────────────────────────────
-const IconText: React.FC<{ icon: React.ReactNode; text: React.ReactNode }> = ({ icon, text }) => (
-  <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.45)' }}>
-    {icon} {text}
-  </span>
-)
+function IconText({ icon, text }: { icon: React.ReactNode; text: React.ReactNode }) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.45)' }}>
+      {icon} {text}
+    </span>
+  )
+}
 
-const ArticlesTab: React.FC = () => (
+function ArticlesTab() {
+  return (
   <List
     itemLayout="vertical"
     dataSource={articles}
@@ -154,8 +161,10 @@ const ArticlesTab: React.FC = () => (
     )}
   />
 )
+}
 
-const ApplicationsTab: React.FC = () => (
+function ApplicationsTab() {
+  return (
   <List
     grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 4 }}
     dataSource={apps}
@@ -175,8 +184,10 @@ const ApplicationsTab: React.FC = () => (
     )}
   />
 )
+}
 
-const ProjectsTab: React.FC = () => (
+function ProjectsTab() {
+  return (
   <List
     grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 4 }}
     dataSource={projects}
@@ -196,14 +207,15 @@ const ProjectsTab: React.FC = () => (
       </List.Item>
     )}
   />
-)
+  )
+}
 
 // ─────────────────────────────────────────────
 // 主组件
 // ─────────────────────────────────────────────
 type TabKey = 'articles' | 'applications' | 'projects'
 
-const AccountCenterPage: React.FC = () => {
+function AccountCenterPage() {
   const [tabKey, setTabKey] = useState<TabKey>('articles')
   const userInfo = useAppStore((s) => s.userInfo)
 

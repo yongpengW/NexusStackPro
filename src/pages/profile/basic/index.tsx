@@ -34,7 +34,7 @@ const progressData: BasicProgress[] = [
   { time: '2017-10-01 13:00', rate: '申请审批通过', status: 'success', operator: '系统', cost: '5mins' },
 ]
 
-const ProfileBasicPage: React.FC = () => {
+function ProfileBasicPage() {
   const { t } = useTranslation()
   const totalNum = goodsData.reduce((sum, item) => sum + item.num, 0)
   const totalAmount = goodsData.reduce((sum, item) => sum + item.amount, 0)

@@ -74,7 +74,7 @@ const operationTabList = [
 type OperationKey = 'tab1' | 'tab2' | 'tab3'
 type PageTab = 'detail' | 'rule'
 
-const AdvancedProfilePage: React.FC = () => {
+function AdvancedProfilePage() {
   const { t } = useTranslation()
   const [tabKey, setTabKey] = useState<PageTab>('detail')
   const [opKey, setOpKey] = useState<OperationKey>('tab1')

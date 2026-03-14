@@ -1,4 +1,4 @@
-﻿import { CloseCircleOutlined } from '@ant-design/icons'
+import { CloseCircleOutlined } from '@ant-design/icons'
 import type { ProColumnType } from '@ant-design/pro-components'
 import {
   EditableProTable,
@@ -51,7 +51,7 @@ interface ErrorField {
   errors: string[]
 }
 
-const AdvancedFormPage: React.FC = () => {
+function AdvancedFormPage() {
   const { t } = useTranslation()
   const [error, setError] = useState<ErrorField[]>([])
 

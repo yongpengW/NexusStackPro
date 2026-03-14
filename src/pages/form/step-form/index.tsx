@@ -1,4 +1,4 @@
-﻿import {
+import {
   PageContainer,
   ProForm,
   ProFormDigit,
@@ -8,7 +8,7 @@
 } from '@ant-design/pro-components'
 import type { FormInstance } from 'antd'
 import { Alert, Button, Card, Descriptions, Divider, message, Result, Statistic } from 'antd'
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface StepDataType {
@@ -19,10 +19,15 @@ interface StepDataType {
   receiverMode: string
 }
 
-const StepDescriptions: React.FC<{ stepData: StepDataType; bordered?: boolean }> = ({
+interface StepDescriptionsProps {
+  stepData: StepDataType
+  bordered?: boolean
+}
+
+function StepDescriptions({
   stepData,
   bordered,
-}) => {
+}: StepDescriptionsProps) {
   const { payAccount, receiverAccount, receiverName, amount } = stepData
   return (
     <Descriptions column={1} bordered={bordered}>
@@ -40,7 +45,7 @@ const StepDescriptions: React.FC<{ stepData: StepDataType; bordered?: boolean }>
   )
 }
 
-const StepFormPage: React.FC = () => {
+function StepFormPage() {
   const { t } = useTranslation()
   const [stepData, setStepData] = useState<StepDataType>({
     payAccount: 'ant-design@alipay.com',

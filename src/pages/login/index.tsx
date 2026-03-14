@@ -10,7 +10,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components'
 import { Alert, App, Tabs } from 'antd'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation, type Location } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
@@ -33,9 +33,9 @@ const encodePasswordToBase64 = (password: string) => {
   return btoa(binary)
 }
 
-const LoginMessage: React.FC<{ content: string }> = ({ content }) => (
-  <Alert style={{ marginBottom: 24 }} message={content} type="error" showIcon />
-)
+function LoginMessage({ content }: { content: string }) {
+  return <Alert style={{ marginBottom: 24 }} message={content} type="error" showIcon />
+}
 
 type LoginFormValues = {
   username: string
@@ -45,7 +45,7 @@ type LoginFormValues = {
   captcha?: string
 }
 
-const LoginPage: React.FC = () => {
+function LoginPage() {
   const [loginError, setLoginError] = useState<string>('')
   const [loginType, setLoginType] = useState<LoginType>('account')
   const { message } = App.useApp()

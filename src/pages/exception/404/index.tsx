@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Button, Card, Result } from 'antd'
 
-const Exception404: React.FC = () => (
+function Exception404() {
+  return (
   <Card variant="borderless">
     <Result
       status="404"
@@ -14,6 +15,7 @@ const Exception404: React.FC = () => (
       }
     />
   </Card>
-)
+  )
+}
 
 export default Exception404

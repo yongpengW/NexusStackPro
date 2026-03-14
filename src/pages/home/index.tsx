@@ -1,11 +1,11 @@
-﻿import { ProCard, PageContainer } from '@ant-design/pro-components'
+import { ProCard, PageContainer } from '@ant-design/pro-components'
 import { Typography, Space, Tag, Button, App } from 'antd'
 import { SmileOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 
 const { Title, Paragraph } = Typography
 
-const HomePage: React.FC = () => {
+function HomePage() {
   const { message } = App.useApp()
   const { t } = useTranslation()
 

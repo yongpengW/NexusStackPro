@@ -1,4 +1,4 @@
-﻿import { PageContainer } from '@ant-design/pro-components'
+import { PageContainer } from '@ant-design/pro-components'
 import { Card, Col, Progress, Row, Statistic, Tag, Timeline, Typography } from 'antd'
 import {
   ClockCircleOutlined,
@@ -43,7 +43,7 @@ const activityLog = [
   { time: '10:15', content: '新增注册用户 89 人', color: 'blue' },
 ]
 
-const MonitorPage: React.FC = () => {
+function MonitorPage() {
   const { t } = useTranslation()
   const [currentTime, setCurrentTime] = useState(new Date())
   useEffect(() => {

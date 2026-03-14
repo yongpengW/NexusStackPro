@@ -1,11 +1,11 @@
+import type { CSSProperties } from 'react'
 import { QuestionCircleOutlined, GlobalOutlined } from '@ant-design/icons'
 import { Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { LANGS } from '@/locales/i18n'
 
-const actionStyle: React.CSSProperties = {
+const actionStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   padding: '0 4px',
@@ -16,7 +16,7 @@ const actionStyle: React.CSSProperties = {
   borderRadius: 4,
 }
 
-export const Question: React.FC = () => {
+export function Question() {
   return (
     <a
       href="https://github.com/yongpengW/NexusStackPro"
@@ -30,7 +30,7 @@ export const Question: React.FC = () => {
   )
 }
 
-export const SelectLang: React.FC = () => {
+export function SelectLang() {
   const { i18n } = useTranslation()
   const current = i18n.language
 

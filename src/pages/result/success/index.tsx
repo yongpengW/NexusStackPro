@@ -1,9 +1,9 @@
-﻿import { DingdingOutlined } from '@ant-design/icons'
+import { DingdingOutlined } from '@ant-design/icons'
 import { GridContent } from '@ant-design/pro-components'
 import { Button, Card, Descriptions, Result, Steps } from 'antd'
 import { Link } from 'react-router-dom'
 
-const ResultSuccess: React.FC = () => {
+function ResultSuccess() {
   const desc1 = (
     <div style={{ margin: '8px 0 4px' }}>
       <span>曲丽丽</span>

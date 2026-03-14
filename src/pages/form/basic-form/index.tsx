@@ -1,4 +1,4 @@
-﻿import {
+import {
   PageContainer,
   ProForm,
   ProFormDateRangePicker,
@@ -10,10 +10,9 @@
   ProFormTextArea,
 } from '@ant-design/pro-components'
 import { Card, message } from 'antd'
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-const BasicFormPage: React.FC = () => {
+function BasicFormPage() {
   const { t } = useTranslation()
   const onFinish = async (values: Record<string, unknown>) => {
     console.log('提交数据', values)

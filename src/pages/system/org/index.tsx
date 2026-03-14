@@ -84,7 +84,8 @@ const nodeCardStyle: React.CSSProperties = {
   maxWidth: 220,
 }
 
-const OrgNodeCard: React.FC<{ node: RegionTreeDto }> = ({ node }) => (
+function OrgNodeCard({ node }: { node: RegionTreeDto }) {
+  return (
   <div style={nodeCardStyle}>
     {renderLevelIcon(node.level)}
     <span style={{ fontWeight: 500, marginRight: 8 }}>{node.name}</span>
@@ -100,9 +101,10 @@ const OrgNodeCard: React.FC<{ node: RegionTreeDto }> = ({ node }) => (
       </Tag>
     )}
   </div>
-)
+  )
+}
 
-const OrgSubTree: React.FC<{ node: RegionTreeDto }> = ({ node }) => {
+function OrgSubTree({ node }: { node: RegionTreeDto }) {
   const hasChildren = node.children && node.children.length > 0
   return (
     <OrgTreeNode key={node.id} label={<OrgNodeCard node={node} />}>
@@ -112,7 +114,7 @@ const OrgSubTree: React.FC<{ node: RegionTreeDto }> = ({ node }) => {
   )
 }
 
-const OrgPage: React.FC = () => {
+function OrgPage() {
   const [keyword, setKeyword] = useState('')
 
   const { data, isLoading } = useQuery({

@@ -48,9 +48,12 @@ const generateMockList = (count: number): BasicListItem[] =>
 
 const ALL_LIST = generateMockList(50)
 
-const ListContent: React.FC<{ data: BasicListItem }> = ({
+function ListContent({
   data: { owner, createdAt, percent, status },
-}) => (
+}: {
+  data: BasicListItem
+}) {
+  return (
   <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
     <div style={{ minWidth: 72 }}>
       <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>负责人</div>
@@ -64,12 +67,11 @@ const ListContent: React.FC<{ data: BasicListItem }> = ({
       <Progress percent={percent} status={status} strokeWidth={6} />
     </div>
   </div>
-)
+  )
+}
 
-const MoreBtn: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({
-  onEdit,
-  onDelete,
-}) => (
+function MoreBtn({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  return (
   <Dropdown
     menu={{
       items: [
@@ -86,9 +88,10 @@ const MoreBtn: React.FC<{ onEdit: () => void; onDelete: () => void }> = ({
       更多 <DownOutlined />
     </a>
   </Dropdown>
-)
+  )
+}
 
-const BasicListPage: React.FC = () => {
+function BasicListPage() {
   const { t } = useTranslation()
   const [list, setList] = useState<BasicListItem[]>(ALL_LIST)
   const [filterStatus, setFilterStatus] = useState<string>('all')

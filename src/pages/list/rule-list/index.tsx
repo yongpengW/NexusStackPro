@@ -44,7 +44,7 @@ const generateMockData = (total = 50): RuleItem[] => {
 
 const ALL_DATA = generateMockData(50)
 
-const RuleListPage: React.FC = () => {
+function RuleListPage() {
   const actionRef = useRef<ActionType | null>(null)
   const { modal, message } = App.useApp()
 

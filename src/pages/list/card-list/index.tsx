@@ -29,7 +29,7 @@ const mockList: CardListItem[] = [
 
 const nullItem = {} as Partial<CardListItem>
 
-const CardListPage: React.FC = () => {
+function CardListPage() {
   const { t } = useTranslation()
   return (
     <PageContainer

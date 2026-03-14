@@ -1,3 +1,4 @@
+import type { CSSProperties, ReactNode } from 'react'
 import {
   LogoutOutlined,
   SettingOutlined,
@@ -6,7 +7,6 @@ import {
 } from '@ant-design/icons'
 import { Avatar } from 'antd'
 import type { MenuProps } from 'antd'
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/store/useAppStore'
@@ -15,22 +15,22 @@ import HeaderDropdown from '../HeaderDropdown'
 
 export type AvatarDropdownProps = {
   menu?: boolean
-  children?: React.ReactNode
+  children?: ReactNode
   showName?: boolean
 }
 
-export const AvatarName: React.FC = () => {
+export function AvatarName() {
   const userInfo = useAppStore((s) => s.userInfo)
   return <span>{userInfo?.userName ?? ''}</span>
 }
 
-export const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ menu, showName = true }) => {
+export function AvatarDropdown({ menu, showName = true }: AvatarDropdownProps) {
   const navigate = useNavigate()
   const userInfo = useAppStore((s) => s.userInfo)
   const clearUserInfo = useAppStore((s) => s.logout)
   const { t } = useTranslation()
 
-  const actionStyle: React.CSSProperties = {
+  const actionStyle: CSSProperties = {
     display: 'flex',
     height: 48,
     alignItems: 'center',

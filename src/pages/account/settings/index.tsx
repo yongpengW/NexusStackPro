@@ -29,7 +29,7 @@ const menuItems = [
   { key: 'binding', icon: <SafetyOutlined />, label: '账号绑定' },
 ]
 
-const AccountSettingsPage: React.FC = () => {
+function AccountSettingsPage() {
   const [activeKey, setActiveKey] = useState('profile')
   const { message } = App.useApp()
   const navigate = useNavigate()

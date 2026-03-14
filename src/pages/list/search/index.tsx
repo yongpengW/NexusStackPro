@@ -98,14 +98,17 @@ const mockApps: ArticleItem[] = Array.from({ length: 8 }, (_, i) => ({
 // ─────────────────────────────────────────────
 // 公共组件
 // ─────────────────────────────────────────────
-const IconText: React.FC<{ icon: React.ReactNode; text: React.ReactNode }> = ({ icon, text }) => (
-  <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.45)' }}>
-    {icon}
-    {text}
-  </span>
-)
+function IconText({ icon, text }: { icon: React.ReactNode; text: React.ReactNode }) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(0,0,0,0.45)' }}>
+      {icon}
+      {text}
+    </span>
+  )
+}
 
-const ArticleListItem: React.FC<{ item: ArticleItem }> = ({ item }) => (
+function ArticleListItem({ item }: { item: ArticleItem }) {
+  return (
   <List.Item
     key={item.id}
     actions={[
@@ -149,7 +152,8 @@ const ArticleListItem: React.FC<{ item: ArticleItem }> = ({ item }) => (
       <span>更新于 {item.updatedAt}</span>
     </div>
   </List.Item>
-)
+  )
+}
 
 // ─────────────────────────────────────────────
 // 主页面
@@ -165,7 +169,7 @@ type TabKey = keyof typeof tabMap
 const filterOptions = ['推荐', '前端', '后端', '数据库', 'AI', '移动端']
 const owners = ['所有人', '吴彦祖', '付小小', '林东东', '周星星', '曲丽丽']
 
-const SearchListPage: React.FC = () => {
+function SearchListPage() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabKey>('articles')
   const [searchText, setSearchText] = useState('')
