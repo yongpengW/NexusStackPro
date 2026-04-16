@@ -29,8 +29,8 @@ import { RegionDrawer } from './RegionDrawer'
 
 // ─── 树节点展开工具 ───────────────────────────────────────────────────────────
 
-function collectAllKeys(nodes: RegionTreeDto[]): number[] {
-  const keys: number[] = []
+function collectAllKeys(nodes: RegionTreeDto[]): string[] {
+  const keys: string[] = []
   const walk = (list: RegionTreeDto[]) => {
     for (const node of list) {
       keys.push(node.id)
@@ -61,7 +61,7 @@ function flattenRegionsUnique(nodes: RegionTreeDto[]): RegionDto[] {
   const map = new Map<string, RegionDto>()
   const walk = (list: RegionTreeDto[]) => {
     list.forEach((n) => {
-      const key = `${n.parentId ?? 0}__${n.name ?? ''}__${n.code ?? ''}__${n.level}`
+      const key = `${n.parentId ?? '0'}__${n.name ?? ''}__${n.code ?? ''}__${n.level}`
       if (!map.has(key)) map.set(key, n)
       if (n.children?.length) walk(n.children)
     })
@@ -128,8 +128,8 @@ export default function RegionPage() {
   }
 
   // ── 左侧树形区域展开 & 选择 ──────────────────────────────────────────────
-  const [expandedKeys, setExpandedKeys] = useState<number[]>([])
-  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null)
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null)
   const initialTreeMounted = useRef(false)
 
   // 首次加载时，默认展开一级节点并选中第一个
@@ -151,7 +151,7 @@ export default function RegionPage() {
   const handleTreeSelect: TreeProps['onSelect'] = (_keys, info) => {
     // 避免重复点击同一节点时将选中状态清空（selected=false）导致右侧列表回退到“全部”
     if (info.selected) {
-      setSelectedRegionId(info.node.key as number)
+      setSelectedRegionId(String(info.node.key))
     }
   }
 
@@ -204,7 +204,7 @@ export default function RegionPage() {
 
   // ── Drawer 状态 ─────────────────────────────────────────────────────────
   const [drawerOpen,  setDrawerOpen]  = useState(false)
-  const [editId,      setEditId]      = useState<number | null>(null)
+  const [editId,      setEditId]      = useState<string | null>(null)
   const [parentNode,  setParentNode]  = useState<RegionTreeDto | null>(null)
 
   const openAddRoot = () => {
@@ -217,7 +217,7 @@ export default function RegionPage() {
     setParentNode(parent)
     setDrawerOpen(true)
   }
-  const openEdit = (id: number) => {
+  const openEdit = (id: string) => {
     setEditId(id)
     setParentNode(null)
     setDrawerOpen(true)
@@ -389,7 +389,7 @@ export default function RegionPage() {
               treeData={toTreeData(treeData)}
               expandedKeys={expandedKeys}
               selectedKeys={selectedRegionId ? [selectedRegionId] : []}
-              onExpand={(keys) => setExpandedKeys(keys as number[])}
+              onExpand={(keys) => setExpandedKeys(keys.map(String))}
               onSelect={handleTreeSelect}
               titleRender={(node) => {
                 const regionNode = node as RegionTreeNode

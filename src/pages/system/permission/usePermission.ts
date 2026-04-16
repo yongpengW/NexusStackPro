@@ -11,20 +11,20 @@ export interface PermissionPageState {
   // 左栏
   platformType: PlatformType
   roleList: RoleDto[]
-  selectedRoleId: number | null
+  selectedRoleId: string | null
 
   // 右栏
   permissionTree: PermissionDto[]
   /** 完全勾选的 menuId 集合（直接驱动 Tree checkedKeys） */
-  checkedKeys: number[]
+  checkedKeys: string[]
   /** 半选父节点 menuId 集合（提交时合并进 menus，dataRange 固定 All） */
-  halfCheckedKeys: number[]
+  halfCheckedKeys: string[]
   /** menuId → DataRange 映射（仅含 checkedKeys 中的节点） */
-  dataRangeMap: Record<number, DataRange>
+  dataRangeMap: Record<string, DataRange>
   isDirty: boolean
 
   // API 绑定缓存（Operation 节点）
-  expandedApiBindings: Record<number, MenuResourceDto[]>
+  expandedApiBindings: Record<string, MenuResourceDto[]>
 
   // 加载 / 保存状态
   loadingRoles: boolean
@@ -38,17 +38,17 @@ export interface UsePermissionResult extends PermissionPageState {
 
   // 角色 & 平台切换
   changePlatform: (next: PlatformType) => Promise<void>
-  changeRole: (roleId: number) => Promise<void>
+  changeRole: (roleId: string) => Promise<void>
 
   // 勾选状态更新（Tree onCheck 回调）
-  updateCheckState: (checked: number[], halfChecked: number[]) => void
+  updateCheckState: (checked: string[], halfChecked: string[]) => void
   /** 单独更新某节点的 DataRange（不影响勾选状态） */
-  updateDataRange: (menuId: number, dataRange: DataRange) => void
+  updateDataRange: (menuId: string, dataRange: DataRange) => void
   checkAll: () => void
   clearAll: () => void
 
   // API 绑定查看
-  loadApiBindings: (menuId: number) => Promise<MenuResourceDto[]>
+  loadApiBindings: (menuId: string) => Promise<MenuResourceDto[]>
 
   // 保存
   save: () => Promise<void>
@@ -57,8 +57,8 @@ export interface UsePermissionResult extends PermissionPageState {
 // ─── 工具函数 ──────────────────────────────────────────────────────────────────
 
 /** 收集所有 hasPermission=true 的“实际权限点”（Menu / Operation），返回 menuId 列表 */
-function collectCheckedIds(list: PermissionDto[]): number[] {
-  const ids: number[] = []
+function collectCheckedIds(list: PermissionDto[]): string[] {
+  const ids: string[] = []
   const walk = (items: PermissionDto[]) => {
     for (const p of items) {
       const isLeafNode = p.menuType === MenuType.Menu || p.menuType === MenuType.Operation
@@ -72,8 +72,8 @@ function collectCheckedIds(list: PermissionDto[]): number[] {
 }
 
 /** 收集所有 hasPermission=true 的“实际权限点”（Menu / Operation），返回 menuId → DataRange 映射 */
-function collectCheckedDataRanges(list: PermissionDto[]): Record<number, DataRange> {
-  const map: Record<number, DataRange> = {}
+function collectCheckedDataRanges(list: PermissionDto[]): Record<string, DataRange> {
+  const map: Record<string, DataRange> = {}
   const walk = (items: PermissionDto[]) => {
     for (const p of items) {
       const isLeafNode = p.menuType === MenuType.Menu || p.menuType === MenuType.Operation
@@ -89,8 +89,8 @@ function collectCheckedDataRanges(list: PermissionDto[]): Record<number, DataRan
 }
 
 /** 收集树中全量 menuId（用于全选） */
-function collectAllMenuIds(list: PermissionDto[]): number[] {
-  const ids: number[] = []
+function collectAllMenuIds(list: PermissionDto[]): string[] {
+  const ids: string[] = []
   const walk = (items: PermissionDto[]) => {
     for (const p of items) {
       ids.push(p.menuId)
@@ -104,7 +104,7 @@ function collectAllMenuIds(list: PermissionDto[]): number[] {
 
 interface UsePermissionOptions {
   platformType?: PlatformType
-  roleId?: number
+  roleId?: string
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -116,15 +116,15 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
     options.platformType ?? PlatformType.Admin,
   )
   const [roleList, setRoleList] = useState<RoleDto[]>([])
-  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null)
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
 
   const [permissionTree, setPermissionTree] = useState<PermissionDto[]>([])
-  const [checkedKeys, setCheckedKeys] = useState<number[]>([])
-  const [halfCheckedKeys, setHalfCheckedKeys] = useState<number[]>([])
-  const [dataRangeMap, setDataRangeMap] = useState<Record<number, DataRange>>({})
+  const [checkedKeys, setCheckedKeys] = useState<string[]>([])
+  const [halfCheckedKeys, setHalfCheckedKeys] = useState<string[]>([])
+  const [dataRangeMap, setDataRangeMap] = useState<Record<string, DataRange>>({})
   const [isDirty, setIsDirty] = useState(false)
 
-  const [expandedApiBindings, setExpandedApiBindings] = useState<Record<number, MenuResourceDto[]>>({})
+  const [expandedApiBindings, setExpandedApiBindings] = useState<Record<string, MenuResourceDto[]>>({})
 
   const [loadingRoles, setLoadingRoles] = useState(false)
   const [loadingPermissions, setLoadingPermissions] = useState(false)
@@ -145,7 +145,7 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
     setIsDirty(false)
   }
 
-  const loadPermissions = async (roleId: number, platform: PlatformType) => {
+  const loadPermissions = async (roleId: string, platform: PlatformType) => {
     setLoadingPermissions(true)
     try {
       const data = await PermissionApi.getRolePermission(roleId, platform)
@@ -163,7 +163,7 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
     }
   }
 
-  const loadRoles = async (platform: PlatformType, preferredRoleId?: number) => {
+  const loadRoles = async (platform: PlatformType, preferredRoleId?: string) => {
     setLoadingRoles(true)
     try {
       // 权限管理左侧角色列表：始终加载全部启用角色（不按平台分页），
@@ -211,21 +211,21 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
     await loadRoles(next)
   }
 
-  const changeRole = async (roleId: number) => {
+  const changeRole = async (roleId: string) => {
     if (roleId === selectedRoleId) return
     setSelectedRoleId(roleId)
     setExpandedApiBindings({})
     await loadPermissions(roleId, platformType)
   }
 
-  const updateCheckState = (checked: number[], halfChecked: number[]) => {
+  const updateCheckState = (checked: string[], halfChecked: string[]) => {
     setCheckedKeys(checked)
     setHalfCheckedKeys(halfChecked)
     // 重新构建 dataRangeMap：保留已勾选节点的原有值，新节点赋 All，
     // 取消勾选的节点因不出现在 checked 中而自动被丢弃。
     // halfChecked 父节点不进入 dataRangeMap（提交时统一 All）。
     setDataRangeMap((prev) => {
-      const next: Record<number, DataRange> = {}
+      const next: Record<string, DataRange> = {}
       for (const id of checked) {
         next[id] = prev[id] ?? DataRange.All
       }
@@ -234,7 +234,7 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
     setIsDirty(true)
   }
 
-  const updateDataRange = (menuId: number, dataRange: DataRange) => {
+  const updateDataRange = (menuId: string, dataRange: DataRange) => {
     setDataRangeMap((prev) => ({ ...prev, [menuId]: dataRange }))
     setIsDirty(true)
   }
@@ -245,7 +245,7 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
     setCheckedKeys(allIds)
     setHalfCheckedKeys([])
     setDataRangeMap((prev) => {
-      const next: Record<number, DataRange> = {}
+      const next: Record<string, DataRange> = {}
       for (const id of allIds) {
         next[id] = prev[id] ?? DataRange.All
       }
@@ -265,7 +265,7 @@ export function usePermission(options: UsePermissionOptions = {}): UsePermission
   const expandedApiBindingsRef = useRef(expandedApiBindings)
   expandedApiBindingsRef.current = expandedApiBindings
 
-  const loadApiBindings = useCallback(async (menuId: number): Promise<MenuResourceDto[]> => {
+  const loadApiBindings = useCallback(async (menuId: string): Promise<MenuResourceDto[]> => {
     if (expandedApiBindingsRef.current[menuId]) {
       return expandedApiBindingsRef.current[menuId]
     }

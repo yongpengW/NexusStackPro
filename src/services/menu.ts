@@ -52,10 +52,11 @@ export const PLATFORM_OPTIONS = [
 // ─── DTO ─────────────────────────────────────────────────────────────────────
 
 export interface MenuDto {
-  id: number
+  /** 雪花 ID，后端 JsonLong 序列化为字符串，前端须全程按 string 传递以免精度丢失 */
+  id: string
   name: string
   code: string
-  parentId: number
+  parentId: string
   type: MenuType
   icon: string
   iconType: MenuIconType
@@ -78,7 +79,8 @@ export interface MenuTreeDto extends MenuDto {
 export interface CreateMenuDto {
   name: string
   code: string
-  parentId?: number | null
+  /** 非根节点时传字符串形式的父级 ID（与后端 long 字符串 JSON 一致） */
+  parentId?: string | null
   type: MenuType
   platformType: number
   icon?: string
@@ -93,7 +95,7 @@ export interface CreateMenuDto {
 }
 
 export interface MenuResourceDto {
-  id: number
+  id: string
   name: string
   code: string
   routePattern: string
@@ -103,14 +105,14 @@ export interface MenuResourceDto {
 
 export interface SelectOptionDto {
   label: string
-  value: number
+  value: string
   children?: SelectOptionDto[]
 }
 
 // ─── Query ───────────────────────────────────────────────────────────────────
 
 export interface MenuTreeQueryDto {
-  parentId?: number
+  parentId?: string
   includeChilds?: boolean
 }
 
@@ -134,24 +136,24 @@ export const MenuApi = {
   getUserTree: (platformType: number) => 
     http.get<MenuTreeDto[]>(buildUrl(`/Menu/usertree/${platformType}`)),
 
-  getById: (id: number) =>
+  getById: (id: string) =>
     http.get<MenuDto>(`/Menu/${id}`),
 
   getSelector: () =>
     http.get<SelectOptionDto[]>('/Menu/selector'),
 
   create: (data: CreateMenuDto) =>
-    http.post<number>('/Menu', data),
+    http.post<string>('/Menu', data),
 
-  update: (id: number, data: CreateMenuDto) =>
+  update: (id: string, data: CreateMenuDto) =>
     http.put<void>(`/Menu/${id}`, data),
 
-  remove: (id: number) =>
+  remove: (id: string) =>
     http.delete<void>(`/Menu/${id}`),
 
-  getResources: (id: number) =>
+  getResources: (id: string) =>
     http.get<MenuResourceDto[]>(`/Menu/${id}/Resources`),
 
-  bindResources: (id: number, resourceIds: number[]) =>
+  bindResources: (id: string, resourceIds: string[]) =>
     http.put<void>(`/Menu/${id}/bind`, resourceIds),
 }

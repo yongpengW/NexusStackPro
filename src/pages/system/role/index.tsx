@@ -45,10 +45,10 @@ export default function RolePage() {
 
   // ─── Drawer 状态 ─────────────────────────────────────────────────────
   const [roleDrawerOpen,  setRoleDrawerOpen]  = useState(false)
-  const [editId,          setEditId]          = useState<number | null>(null)
+  const [editId,          setEditId]          = useState<string | null>(null)
 
   const openAddDrawer  = () => { setEditId(null); setRoleDrawerOpen(true) }
-  const openEditDrawer = (id: number) => { setEditId(id); setRoleDrawerOpen(true) }
+  const openEditDrawer = (id: string) => { setEditId(id); setRoleDrawerOpen(true) }
 
   const openPermissionPage = (record: RoleDto) => {
     // 当平台筛选为“全部”时，从角色自身平台 Flags 中选择一个作为默认平台

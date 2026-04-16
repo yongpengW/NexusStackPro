@@ -7,15 +7,15 @@ import type { MenuTreeDto, MenuDto } from '@/services/menu'
 
 export const MENU_QUERY_KEYS = {
   tree: (platformType: number) => ['menu', 'tree', platformType] as const,
-  detail: (id: number) => ['menu', 'detail', id] as const,
+  detail: (id: string) => ['menu', 'detail', id] as const,
   selector: ['menu', 'selector'] as const,
-  resources: (id: number) => ['menu', 'resources', id] as const,
+  resources: (id: string) => ['menu', 'resources', id] as const,
 }
 
 export function useMenu(platformType: number) {
   const { message, modal } = App.useApp()
   const queryClient = useQueryClient()
-  const [operatingId, setOperatingId] = useState<number | null>(null)
+  const [operatingId, setOperatingId] = useState<string | null>(null)
 
   const treeQuery = useQuery({
     queryKey: MENU_QUERY_KEYS.tree(platformType),
@@ -30,7 +30,7 @@ export function useMenu(platformType: number) {
   }, [queryClient])
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => MenuApi.remove(id),
+    mutationFn: (id: string) => MenuApi.remove(id),
     onSuccess: () => {
       message.success('删除成功')
       refresh()

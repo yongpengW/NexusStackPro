@@ -14,16 +14,16 @@ interface PermissionTreeProps {
   loading: boolean
   saving: boolean
   permissionTree: PermissionDto[]
-  checkedKeys: number[]
+  checkedKeys: string[]
   /** menuId → DataRange 映射（仅含已勾选节点） */
-  dataRangeMap: Record<number, DataRange>
-  expandedApiBindings: Record<number, MenuResourceDto[]>
-  onCheckChange: (checked: number[], halfChecked: number[]) => void
-  onDataRangeChange: (menuId: number, dataRange: DataRange) => void
+  dataRangeMap: Record<string, DataRange>
+  expandedApiBindings: Record<string, MenuResourceDto[]>
+  onCheckChange: (checked: string[], halfChecked: string[]) => void
+  onDataRangeChange: (menuId: string, dataRange: DataRange) => void
   onCheckAll: () => void
   onClearAll: () => void
   onSave: () => void
-  loadApiBindings: (menuId: number) => Promise<MenuResourceDto[]>
+  loadApiBindings: (menuId: string) => Promise<MenuResourceDto[]>
 }
 
 interface TreeNodeExtra {
@@ -88,8 +88,8 @@ export function PermissionTree({
   loadApiBindings,
 }: PermissionTreeProps) {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
-  const [loadingApiMenuId, setLoadingApiMenuId] = useState<number | null>(null)
-  const [apiDrawerMenu, setApiDrawerMenu] = useState<{ menuId: number; menuName: string } | null>(
+  const [loadingApiMenuId, setLoadingApiMenuId] = useState<string | null>(null)
+  const [apiDrawerMenu, setApiDrawerMenu] = useState<{ menuId: string; menuName: string } | null>(
     null,
   )
   const [apiDrawerOpen, setApiDrawerOpen] = useState(false)
@@ -123,11 +123,14 @@ export function PermissionTree({
   ) => {
     if (isSystemRole) return
     const checkedArr = Array.isArray(checked) ? checked : checked.checked
-    onCheckChange(checkedArr as number[], (info.halfCheckedKeys ?? []) as number[])
+    onCheckChange(
+      checkedArr.map((k) => String(k)),
+      (info.halfCheckedKeys ?? []).map((k) => String(k)),
+    )
   }
 
   const openApiDrawer = useCallback(
-    async (menuId: number, menuName: string) => {
+    async (menuId: string, menuName: string) => {
       setApiDrawerMenu({ menuId, menuName })
       setApiDrawerOpen(true)
       if (!expandedApiBindings[menuId] && loadingApiMenuId !== menuId) {
@@ -139,7 +142,7 @@ export function PermissionTree({
     [expandedApiBindings, loadingApiMenuId, loadApiBindings],
   )
 
-  const renderApiBindings = (menuId: number) => {
+  const renderApiBindings = (menuId: string) => {
     const list = expandedApiBindings[menuId]
     if (loadingApiMenuId === menuId) {
       return <div style={{ padding: '6px 12px' }}><Spin size="small" /></div>

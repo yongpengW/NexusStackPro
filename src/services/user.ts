@@ -12,19 +12,19 @@ export enum Gender {
 // ─── DTO ─────────────────────────────────────────────────────────────────────
 
 export interface UserRoleDto {
-  id: number
-  roleId: number
+  id: string
+  roleId: string
   roleName: string
   platforms: PlatformType
 }
 
 export interface UserDepartmentDto {
-  userId: number
-  departmentId: number
+  userId: string
+  departmentId: string
 }
 
 export interface UserDto {
-  id: number
+  id: string
   userName: string
   realName: string
   nickName: string
@@ -53,8 +53,8 @@ export interface CreateUserDto {
   gender?: Gender
   remark?: string
   isEnable: boolean
-  userRoles: { roleId: number }[]
-  departmentIds: number[]
+  userRoles: { roleId: string }[]
+  departmentIds: string[]
 }
 
 export interface UserQueryParams {
@@ -63,7 +63,7 @@ export interface UserQueryParams {
   userName?: string
   mobile?: string
   email?: string
-  roleId?: number
+  roleId?: string
   isEnable?: boolean
 }
 
@@ -83,7 +83,7 @@ export const UserApi = {
     ),
 
   /** GET /api/User/{id} — 详情（含角色/组织） */
-  getById: (id: number) =>
+  getById: (id: string) =>
     http.get<UserDto>(`/User/${id}`),
 
   /** GET /api/User/me — 当前登录用户 */
@@ -92,26 +92,26 @@ export const UserApi = {
 
   /** POST /api/User — 新增 */
   create: (data: CreateUserDto) =>
-    http.post<number>('/User', data),
+    http.post<string>('/User', data),
 
   /** PUT /api/User/{id} — 编辑 */
-  update: (id: number, data: CreateUserDto) =>
+  update: (id: string, data: CreateUserDto) =>
     http.put<void>(`/User/${id}`, data),
 
   /** DELETE /api/User/{id} — 删除 */
-  remove: (id: number) =>
+  remove: (id: string) =>
     http.delete<void>(`/User/${id}`),
 
   /** PUT /api/User/enable/{id} — 启用 */
-  enable: (id: number) =>
+  enable: (id: string) =>
     http.put<void>(`/User/enable/${id}`, {}),
 
   /** PUT /api/User/disable/{id} — 禁用 */
-  disable: (id: number) =>
+  disable: (id: string) =>
     http.put<void>(`/User/disable/${id}`, {}),
 
   /** PUT /api/User/reset/{id} — 重置密码 */
-  resetPassword: (id: number) =>
+  resetPassword: (id: string) =>
     http.put<void>(`/User/reset/${id}`, {}),
 
   /** PUT /api/User/me/password — 当前用户修改自己的密码 */

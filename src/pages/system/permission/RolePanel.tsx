@@ -8,9 +8,9 @@ const { Text } = Typography
 
 interface RolePanelProps {
   roles: RoleDto[]
-  selectedRoleId: number | null
+  selectedRoleId: string | null
   loading: boolean
-  onSelectRole: (roleId: number) => void
+  onSelectRole: (roleId: string) => void
   keyword: string
   onKeywordChange: (value: string) => void
 }

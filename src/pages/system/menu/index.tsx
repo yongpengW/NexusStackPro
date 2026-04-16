@@ -45,8 +45,8 @@ const PLATFORM_TABS = [
   { value: PlatformType.Android, label: 'App' },
 ]
 
-function collectAllKeys(nodes: MenuTreeDto[]): number[] {
-  const keys: number[] = []
+function collectAllKeys(nodes: MenuTreeDto[]): string[] {
+  const keys: string[] = []
   const walk = (list: MenuTreeDto[]) => {
     for (const node of list) {
       keys.push(node.id)
@@ -106,8 +106,8 @@ export default function MenuPage() {
     setKeyword('')
   }
 
-  const [expandedKeys, setExpandedKeys] = useState<number[]>([])
-  const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null)
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+  const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null)
   const initialExpandDone = useRef(false)
   useEffect(() => {
     if (initialExpandDone.current) return
@@ -123,12 +123,12 @@ export default function MenuPage() {
 
   const handleTreeSelect: TreeProps['onSelect'] = (_keys, info) => {
     if (info.selected) {
-      setSelectedMenuId(info.node.key as number)
+      setSelectedMenuId(String(info.node.key))
     }
   }
 
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
   const [parentNode, setParentNode] = useState<MenuTreeDto | null>(null)
   const [resourceDrawerOpen, setResourceDrawerOpen] = useState(false)
   const [resourceMenu, setResourceMenu] = useState<MenuDto | null>(null)
@@ -163,7 +163,7 @@ export default function MenuPage() {
     setParentNode(parent)
     setMenuDrawerOpen(true)
   }
-  const openEdit = (id: number) => {
+  const openEdit = (id: string) => {
     setEditId(id)
     setParentNode(null)
     setMenuDrawerOpen(true)
@@ -366,7 +366,7 @@ export default function MenuPage() {
               treeData={toTreeData(dataSource)}
               expandedKeys={expandedKeys}
               selectedKeys={selectedMenuId ? [selectedMenuId] : []}
-              onExpand={(keys) => setExpandedKeys(keys as number[])}
+              onExpand={(keys) => setExpandedKeys(keys.map(String))}
               onSelect={handleTreeSelect}
               titleRender={(node) => {
                 const menuNode = node as MenuTreeNode

@@ -24,7 +24,7 @@ interface RegionDrawerProps {
   /** 抽屉是否可见 */
   open: boolean
   /** 编辑时传入目标 id；null 表示新增模式 */
-  editId?: number | null
+  editId?: string | null
   /** 点击"新增子级"时传入父节点，预填 parentId 与 level */
   parentNode?: RegionTreeDto | null
   onClose: () => void
@@ -65,7 +65,7 @@ export function RegionDrawer({
 
   // ─── 编辑时获取详情回填 ───────────────────────────────────────────────
   const detailQuery = useQuery({
-    queryKey: REGION_QUERY_KEYS.detail(editId ?? 0),
+    queryKey: REGION_QUERY_KEYS.detail(editId ?? ''),
     queryFn: () => RegionApi.getById(editId!),
     enabled: isEdit && open,
   })
@@ -94,7 +94,7 @@ export function RegionDrawer({
         ? (Math.min(parentNode.level + 1, RegionLevel.Department) as RegionLevel)
         : RegionLevel.Country
     form.setFieldsValue({
-      parentId: parentNode?.id ?? 0,
+      parentId: parentNode?.id ?? '0',
       level:    defaultLevel,
       order:    1,
       isEnable: true,
@@ -145,7 +145,7 @@ export function RegionDrawer({
   // ─── 选择器选项（编辑时排除自身） ────────────────────────────────────
 
   const selectorOptions = [
-    { label: '无（根节点）', value: 0 },
+    { label: '无（根节点）', value: '0' },
     ...(selectorQuery.data ?? [])
       .filter((o) => o.value !== editId)
       .map((o) => ({ label: o.label, value: o.value })),
@@ -195,7 +195,7 @@ export function RegionDrawer({
         <Form
           form={form}
           layout="vertical"
-          initialValues={{ order: 1, isEnable: true, level: RegionLevel.Country, parentId: 0 }}
+          initialValues={{ order: 1, isEnable: true, level: RegionLevel.Country, parentId: '0' }}
         >
           <Form.Item
             label="区域名称"

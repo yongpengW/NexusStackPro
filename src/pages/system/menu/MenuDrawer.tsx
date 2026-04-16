@@ -15,6 +15,7 @@ import {
 } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { isBusinessError } from '@/utils/request'
+import { toOptionalSnowflakeString } from '@/utils/snowflakeId'
 import {
   MenuApi,
   MenuType,
@@ -29,7 +30,7 @@ import { MENU_QUERY_KEYS } from './useMenu'
 
 interface MenuDrawerProps {
   open: boolean
-  editId: number | null
+  editId: string | null
   parentNode: MenuTreeDto | null
   treeData: MenuTreeDto[]
   platformType: number
@@ -37,8 +38,8 @@ interface MenuDrawerProps {
   onSuccess: () => void
 }
 
-function collectIdsByType(nodes: MenuTreeDto[], type: MenuType): { id: number; name: string }[] {
-  const list: { id: number; name: string }[] = []
+function collectIdsByType(nodes: MenuTreeDto[], type: MenuType): { id: string; name: string }[] {
+  const list: { id: string; name: string }[] = []
   const walk = (items: MenuTreeDto[]) => {
     for (const n of items) {
       if (n.type === type) list.push({ id: n.id, name: n.name })
@@ -49,8 +50,8 @@ function collectIdsByType(nodes: MenuTreeDto[], type: MenuType): { id: number; n
   return list
 }
 
-function collectSelfAndDescendantIds(nodes: MenuTreeDto[], targetId: number): number[] {
-  const ids: number[] = []
+function collectSelfAndDescendantIds(nodes: MenuTreeDto[], targetId: string): string[] {
+  const ids: string[] = []
   const walk = (items: MenuTreeDto[]): boolean => {
     for (const n of items) {
       if (n.id === targetId) {
@@ -94,7 +95,7 @@ export function MenuDrawer({
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const detailQuery = useQuery({
-    queryKey: MENU_QUERY_KEYS.detail(editId ?? 0),
+    queryKey: MENU_QUERY_KEYS.detail(editId ?? ''),
     queryFn: () => MenuApi.getById(editId!),
     enabled: isEdit && open,
   })
@@ -169,10 +170,7 @@ export function MenuDrawer({
       const values = await form.validateFields()
       const payload: CreateMenuDto = {
         ...values,
-        parentId:
-          values.parentId === '0' || values.parentId === 0 || values.parentId == null
-            ? undefined
-            : Number(values.parentId),
+        parentId: toOptionalSnowflakeString(values.parentId),
         order: values.order ?? 0,
         isVisible: values.isVisible ?? true,
         isExternalLink: values.isExternalLink ?? false,

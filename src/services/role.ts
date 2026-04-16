@@ -63,14 +63,14 @@ export const DATA_RANGE_OPTIONS: { value: DataRange; label: string }[] = [
 
 /** 单条菜单权限提交项 */
 export interface MenuPermissionItem {
-  menuId:    number
+  menuId:    string
   dataRange: DataRange
 }
 
 // ─── DTO ─────────────────────────────────────────────────────────────────────
 
 export interface RoleDto {
-  id: number
+  id: string
   name: string
   code: string
   isSystem: boolean
@@ -91,11 +91,11 @@ export interface CreateRoleDto {
 }
 
 export interface PermissionDto {
-  id: number
-  roleId: number
-  menuId: number
+  id: string
+  roleId: string
+  menuId: string
   menuName: string
-  menuParentId: number
+  menuParentId: string
   menuUrl: string
   menuType: MenuType
   menuOrder: number
@@ -111,7 +111,7 @@ export interface PermissionDto {
 }
 
 export interface ChangeRolePermissionDto {
-  roleId: number
+  roleId: string
   platformType?: number
   /** 每条菜单权限均需携带 dataRange；halfChecked 父节点统一使用 DataRange.All */
   menus: MenuPermissionItem[]
@@ -119,7 +119,7 @@ export interface ChangeRolePermissionDto {
 
 export interface SelectOptionDto {
   label: string
-  value: number
+  value: string
   children?: SelectOptionDto[]
 }
 
@@ -146,34 +146,34 @@ export const RoleApi = {
     http.get<SelectOptionDto[]>('/Role/selector'),
 
   /** GET /api/Role/{id} — 详情 */
-  getById: (id: number) =>
+  getById: (id: string) =>
     http.get<RoleDto>(`/Role/${id}`),
 
   /** POST /api/Role — 新增 */
   create: (data: CreateRoleDto) =>
-    http.post<number>('/Role', data),
+    http.post<string>('/Role', data),
 
   /** PUT /api/Role/{id} — 编辑 */
-  update: (id: number, data: CreateRoleDto) =>
+  update: (id: string, data: CreateRoleDto) =>
     http.put<void>(`/Role/${id}`, data),
 
   /** DELETE /api/Role/{id} — 删除 */
-  remove: (id: number) =>
+  remove: (id: string) =>
     http.delete<void>(`/Role/${id}`),
 
   /** PUT /api/Role/enable/{id} — 启用 */
-  enable: (id: number) =>
+  enable: (id: string) =>
     http.put<void>(`/Role/enable/${id}`, {}),
 
   /** PUT /api/Role/disable/{id} — 禁用 */
-  disable: (id: number) =>
+  disable: (id: string) =>
     http.put<void>(`/Role/disable/${id}`, {}),
 
   /** GET /api/Role/permission — 获取全量菜单树及角色权限状态 */
-  getPermission: (roleId: number, platformType: number) =>
+  getPermission: (roleId: string, platformType: number) =>
     http.get<PermissionDto[]>(buildUrl('/Role/permission', { roleId, platformType })),
 
   /** POST /api/Role/permission/{roleId} — 保存角色权限 */
-  savePermission: (roleId: number, data: ChangeRolePermissionDto) =>
+  savePermission: (roleId: string, data: ChangeRolePermissionDto) =>
     http.post<void>(`/Role/permission/${roleId}`, data),
 }

@@ -24,8 +24,8 @@ interface ResourceDrawerProps {
   onClose: () => void
 }
 
-function collectCheckedIds(list: MenuResourceDto[]): number[] {
-  const ids: number[] = []
+function collectCheckedIds(list: MenuResourceDto[]): string[] {
+  const ids: string[] = []
   for (const group of list) {
     if (group.operations?.length) {
       for (const op of group.operations) {
@@ -56,16 +56,16 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [searchKeyword, setSearchKeyword] = useState('')
 
-  const menuId = menu?.id ?? 0
+  const menuId = menu?.id ?? ''
 
   const resourceQuery = useQuery({
     queryKey: MENU_QUERY_KEYS.resources(menuId),
     queryFn: () => MenuApi.getResources(menuId),
-    enabled: open && !!menu,
+    enabled: open && !!menu && menuId !== '',
   })
 
   const groups = useMemo(() => resourceQuery.data ?? [], [resourceQuery.data])
-  const [checkedIds, setCheckedIds] = useState<number[]>([])
+  const [checkedIds, setCheckedIds] = useState<string[]>([])
   const [activeKeys, setActiveKeys] = useState<string[]>([])
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
   const groupStateMap = useMemo(() => {
     const map = new Map<
       string,
-      { groupId: string; childIds: number[]; allChecked: boolean; indeterminate: boolean }
+      { groupId: string; childIds: string[]; allChecked: boolean; indeterminate: boolean }
     >()
     groups.forEach((g) => {
       const childIds = (g.operations ?? []).map((op) => op.id)
@@ -127,7 +127,7 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
     })
   }, [open, groups])
 
-  const handleGroupToggle = (childIds: number[], checkAll: boolean) => {
+  const handleGroupToggle = (childIds: string[], checkAll: boolean) => {
     setCheckedIds((prev) => {
       const set = new Set(prev)
       if (checkAll) {
@@ -139,7 +139,7 @@ export function ResourceDrawer({ open, menu, onClose }: ResourceDrawerProps) {
     })
   }
 
-  const handleCheckboxChange = (groupChildIds: number[], list: number[]) => {
+  const handleCheckboxChange = (groupChildIds: string[], list: string[]) => {
     const selected = list
     setCheckedIds((prev) => {
       const others = prev.filter((id) => !groupChildIds.includes(id))

@@ -7,7 +7,7 @@ import type { RegionTreeDto, RegionDto } from '@/services/region'
 
 export const REGION_QUERY_KEYS = {
   tree: ['region', 'tree'] as const,
-  detail: (id: number) => ['region', 'detail', id] as const,
+  detail: (id: string) => ['region', 'detail', id] as const,
   selector: ['region', 'selector'] as const,
 }
 
@@ -18,7 +18,7 @@ export function useRegion() {
   // ─── 搜索状态 ────────────────────────────────────────────────────────────
   const [keyword, setKeyword] = useState('')
   /** 当前正在进行启用/禁用/删除操作的行 id */
-  const [operatingId, setOperatingId] = useState<number | null>(null)
+  const [operatingId, setOperatingId] = useState<string | null>(null)
 
   // ─── 树形数据（作为单一数据源） ──────────────────────────────────────────
   const treeQuery = useQuery({
@@ -35,7 +35,7 @@ export function useRegion() {
 
   // ─── 启用 ────────────────────────────────────────────────────────────────
   const enableMutation = useMutation({
-    mutationFn: (id: number) => RegionApi.enable(id),
+    mutationFn: (id: string) => RegionApi.enable(id),
     onSuccess: () => {
       message.success('已启用')
       refresh()
@@ -48,7 +48,7 @@ export function useRegion() {
 
   // ─── 禁用 ────────────────────────────────────────────────────────────────
   const disableMutation = useMutation({
-    mutationFn: (id: number) => RegionApi.disable(id),
+    mutationFn: (id: string) => RegionApi.disable(id),
     onSuccess: () => {
       message.success('已禁用')
       refresh()
@@ -61,7 +61,7 @@ export function useRegion() {
 
   // ─── 删除 ────────────────────────────────────────────────────────────────
   const removeMutation = useMutation({
-    mutationFn: (id: number) => RegionApi.remove(id),
+    mutationFn: (id: string) => RegionApi.remove(id),
     onSuccess: () => {
       message.success('删除成功')
       refresh()
@@ -75,7 +75,7 @@ export function useRegion() {
   // ─── 操作入口 ─────────────────────────────────────────────────────────────
 
   const handleEnable = useCallback(
-    (id: number) => {
+    (id: string) => {
       setOperatingId(id)
       enableMutation.mutate(id)
     },

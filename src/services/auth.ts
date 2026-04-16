@@ -11,14 +11,15 @@ export interface PasswordLoginParams {
 }
 
 export interface RefreshTokenParams {
-  userId: number
+  /** 与登录结果一致，雪花 ID 时后端 JsonLong 为字符串 */
+  userId: string
   refreshToken: string
 }
 
 // ─── Response ───────────────────────────────────────────────────────────────
 
 export interface LoginResult {
-  userId: number
+  userId: string
   userName: string
   email: string
   token: string

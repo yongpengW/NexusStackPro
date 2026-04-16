@@ -7,10 +7,10 @@ import type { UserDto } from '@/services/user'
 
 export function useUser(reload: () => void) {
   const { message, modal } = App.useApp()
-  const [operatingId, setOperatingId] = useState<number | null>(null)
+  const [operatingId, setOperatingId] = useState<string | null>(null)
 
   const enableMutation = useMutation({
-    mutationFn: (id: number) => UserApi.enable(id),
+    mutationFn: (id: string) => UserApi.enable(id),
     onSuccess: () => {
       message.success('已启用')
       reload()
@@ -22,7 +22,7 @@ export function useUser(reload: () => void) {
   })
 
   const disableMutation = useMutation({
-    mutationFn: (id: number) => UserApi.disable(id),
+    mutationFn: (id: string) => UserApi.disable(id),
     onSuccess: () => {
       message.success('已禁用')
       reload()
@@ -34,7 +34,7 @@ export function useUser(reload: () => void) {
   })
 
   const resetMutation = useMutation({
-    mutationFn: (id: number) => UserApi.resetPassword(id),
+    mutationFn: (id: string) => UserApi.resetPassword(id),
     onSuccess: () => {
       message.success('密码已重置为手机号后6位')
       reload()
@@ -46,7 +46,7 @@ export function useUser(reload: () => void) {
   })
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => UserApi.remove(id),
+    mutationFn: (id: string) => UserApi.remove(id),
     onSuccess: () => {
       message.success('删除成功')
       reload()
@@ -58,7 +58,7 @@ export function useUser(reload: () => void) {
   })
 
   const handleEnable = useCallback(
-    (id: number) => {
+    (id: string) => {
       setOperatingId(id)
       enableMutation.mutate(id)
     },

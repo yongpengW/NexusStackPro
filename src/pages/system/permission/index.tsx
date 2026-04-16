@@ -22,7 +22,7 @@ export default function PermissionPage() {
   const roleIdParam = searchParams.get('roleId')
   const platformParam = searchParams.get('platform')
 
-  const initialRoleId = roleIdParam ? Number(roleIdParam) || undefined : undefined
+  const initialRoleId = roleIdParam?.trim() ? roleIdParam.trim() : undefined
   const platformValue = platformParam ? Number(platformParam) : NaN
   const validPlatforms = [PlatformType.Admin, PlatformType.Pc, PlatformType.Mini, PlatformType.Android]
   const initialPlatformType =
@@ -45,7 +45,7 @@ export default function PermissionPage() {
     })
   }
 
-  const handleSelectRole = (roleId: number) => {
+  const handleSelectRole = (roleId: string) => {
     if (roleId === perm.selectedRoleId) return
     if (!perm.isDirty) {
       void perm.changeRole(roleId)

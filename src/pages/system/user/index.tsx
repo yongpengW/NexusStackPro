@@ -21,7 +21,7 @@ export default function UserPage() {
     useUser(() => actionRef.current?.reload())
 
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<UserDto | null>(null)
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function UserPage() {
     setDrawerOpen(true)
   }
 
-  const openEdit = (id: number) => {
+  const openEdit = (id: string) => {
     setEditId(id)
     setDrawerOpen(true)
   }
@@ -285,7 +285,7 @@ export default function UserPage() {
               userName: userName as string | undefined,
               mobile: mobile as string | undefined,
               email: email as string | undefined,
-              roleId: roleId ? Number(roleId) : undefined,
+              roleId: roleId != null && roleId !== '' ? String(roleId) : undefined,
               isEnable:
                 isEnable === 'true'
                   ? true

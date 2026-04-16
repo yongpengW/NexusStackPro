@@ -21,14 +21,14 @@ import { RegionApi, type SelectOptionDto as RegionSelectOptionDto } from '@/serv
 
 interface UserDrawerProps {
   open: boolean
-  editId: number | null
+  editId: string | null
   onClose: () => void
   onSuccess: () => void
 }
 
 export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps) {
   const isEdit = editId != null
-  const [form] = Form.useForm<CreateUserDto & { roleIds: number[]; departmentIds: number[] }>()
+  const [form] = Form.useForm<CreateUserDto & { roleIds: string[]; departmentIds: string[] }>()
   const { message } = App.useApp()
   const queryClient = useQueryClient()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -48,7 +48,7 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
   })
 
   const detailQuery = useQuery({
-    queryKey: ['user', 'detail', editId ?? 0],
+    queryKey: ['user', 'detail', editId ?? ''],
     queryFn: () => UserApi.getById(editId!),
     enabled: isEdit && open,
   })
@@ -75,7 +75,7 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
         remark: detail.remark,
         roleIds: detail.userRoles?.map((r) => r.roleId) ?? [],
         departmentIds: detail.departments?.map((d) => d.departmentId) ?? [],
-      } as unknown as Partial<CreateUserDto & { roleIds: number[]; departmentIds: number[] }>)
+      } as unknown as Partial<CreateUserDto & { roleIds: string[]; departmentIds: string[] }>)
     } else if (!isEdit && open) {
       form.setFieldsValue({
         userName: undefined,
@@ -88,7 +88,7 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
         remark: undefined,
         roleIds: [],
         departmentIds: [],
-      } as Partial<CreateUserDto & { roleIds: number[]; departmentIds: number[] }>)
+      } as Partial<CreateUserDto & { roleIds: string[]; departmentIds: string[] }>)
     }
   }, [isEdit, open, detail, editId, form])
 
@@ -121,8 +121,8 @@ export function UserDrawer({ open, editId, onClose, onSuccess }: UserDrawerProps
     try {
       const values = await form.validateFields()
       const { roleIds, departmentIds, ...rest } = values as CreateUserDto & {
-        roleIds: number[]
-        departmentIds: number[]
+        roleIds: string[]
+        departmentIds: string[]
       }
       const payload: CreateUserDto = {
         ...rest,

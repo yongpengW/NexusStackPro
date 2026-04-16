@@ -15,6 +15,7 @@
 5. **组件复用**：相同功能的状态 Tag、操作列 Dropdown、Drawer 标题逻辑须抽取为公共组件或 Hook，避免在每个页面重复实现。
 6. **错误提示不重复**：网络/401/403/500 等已由 `request.ts` 全局统一提示，**禁止**在业务代码里再次对上述错误调用 `message.error()` 或 `notification`，否则用户会看到**同一条错误被提示两次**。业务层**必须**使用 `@/utils/request` 导出的 **`isBusinessError(err)`** 判断后再提示（仅 `isBusinessError(err)` 为 `true` 时才可 `message.error` / `setErrorMsg`）。详见 **十二、12.6 节**。
 7. **组件写法**：**禁止**使用类组件（Class Component）与 **React.FC 类型写法**；**必须**使用**函数组件 + 显式 Props 类型**（函数声明或 `const Component = (props: Props) => {}`，Props 单独定义或内联）。唯一例外：错误边界等 React 官方规定必须使用 class 的场景（如 `ErrorBoundary`）可保留类组件。迁移说明见 **《React.FC 迁移至函数写法指南》**（`Docs/PRD/React-FC-Migration.md`）。
+8. **雪花 ID（Int64）**：主键、外键在类型与运行时一律按 **`string`** 处理；**禁止**对 ID 使用 `Number()` / `parseInt` 参与请求或比较（除非业务确认为安全整数范围内的小整型）。工具与约定见 **§2.4**。
 
 ### 1.1 组件写法规范（禁止 React.FC，必须函数写法）
 
@@ -97,8 +98,8 @@ const users = await http.get<IPagedList<UserDto>>(
   buildUrl('/User/list', { page: 1, limit: 10, userName: 'admin' })
 )
 
-// POST
-const id = await http.post<number>('/User', createUserDto)
+// POST（主键为雪花时返回 string，见 §2.4）
+const id = await http.post<string>('/User', createUserDto)
 
 // PUT
 await http.put<void>(`/User/${id}`, updateDto)
@@ -127,6 +128,51 @@ interface IPagedList<T> {
 ```
 
 > **注意**：开发时请用浏览器 DevTools 确认分页响应的实际结构，ProTable `request` 函数中的 `total` 字段来源以实际字段名为准（通常是 `totalItemCount`）。
+
+### 2.4 雪花 ID（Int64 / long）
+
+后端主键、外键等若使用雪花算法（64 位整型），**不得**在前端用 JavaScript `number` 贯穿业务：`number` 为 IEEE 754 双精度浮点，**安全整数仅到 ±(2⁵³−1)**；JSON 若以**数字**形式返回大整数，`JSON.parse` 阶段就可能失真，后续再 `Number()` 也无法恢复。
+
+#### 协议与类型约定
+
+| 层级 | 约定 |
+|------|------|
+| **后端** | 对 `long` / `Int64` 使用 JsonLong（或等价转换器），在 JSON 中序列化为**字符串**（如 `"1970233031234567890"`）。 |
+| **DTO** | 各 `src/services/*.ts` 中实体 ID、外键（如 `id`、`parentId`、`roleId`、`userId`、`menuId` 等）类型为 **`string`**，与运行时一致。 |
+| **URL / 路径** | `GET /api/User/{id}`、`/system/permission?roleId=...` 等使用**原始字符串**拼接或读取，**禁止**对 ID 使用 `Number(urlParam)`。 |
+| **表单与 Select** | 选项 `value`、表单受控值使用 **string**；提交 DTO 时**禁止**写 `Number(xxxId)`。 |
+
+#### 工具：`@/utils/snowflakeId.ts`
+
+与 `dateUtils` 类似，项目提供专用工具，**优先复用**而非手写分支：
+
+| 导出 | 用途 |
+|------|------|
+| `SnowflakeId` | 类型别名（`string`），DTO 注释语义用。 |
+| `isUnsafeSnowflakeNumber(n)` | 调试：判断 `number` 是否为已超出安全整数范围的整数（多为误解析导致）。 |
+| `isRootSnowflakeValue(v)` | 是否视为「根」/ 空：`null`、`undefined`、`''`、`'0'`、`0`。 |
+| `snowflakeStringFromUnknown(v)` | 将接口或未知字段规范为雪花字符串；无法识别时返回 `undefined`。 |
+| `toOptionalSnowflakeString(v)` | **可选父级 ID**（如菜单 `parentId`）：根 → `undefined`，否则 → 字符串；**替代**对父级 ID 的 `Number()`。 |
+
+**示例（菜单保存，父级 ID）：**
+
+```typescript
+import { toOptionalSnowflakeString } from '@/utils/snowflakeId'
+
+const payload: CreateMenuDto = {
+  ...values,
+  parentId: toOptionalSnowflakeString(values.parentId),
+}
+```
+
+#### 业务特例说明
+
+- **区域管理**：上级区域「无（根节点）」在前端统一为字符串 **`'0'`**（与选择器 `value` 一致）；若后端要求省略字段或另有约定，在提交前单独映射，仍保持**不要用 `number` 承载雪花**。
+- **权限树**：`menuId`、`checkedKeys` 等与树节点 key 一律按 **string** 处理；`Tree` 的 `onCheck` 回调里若得到 `React.Key`，需 `String(k)` 再写入状态。
+
+#### 与全局 `request.ts` 的关系
+
+当前响应体仍通过标准 `JSON.parse` 解析；**根治精度依赖后端对 long 输出为字符串**。若某接口仍返回 JSON 数字形式的大整数，仅靠前端工具**无法还原**已丢失的低位，需修正该接口序列化。
 
 ---
 
@@ -392,7 +438,7 @@ import { ProForm, ProFormText, ProFormSelect, ProFormSwitch, DrawerForm } from '
         await http.put<void>(`/User/${editId}`, values)
         message.success('保存成功')
       } else {
-        await http.post<number>('/User', values)
+        await http.post<string>('/User', values)
         message.success('用户创建成功，初始密码为手机号后6位')
       }
       actionRef.current?.reload()
@@ -736,11 +782,11 @@ const handleFinish = async (values: CreateRegionDto) => {
 #### 状态切换（启用/禁用）——行内操作
 
 ```tsx
-// 维护正在操作的行 id，实现行级 loading
-const [operatingId, setOperatingId] = useState<number | null>(null)
+// 维护正在操作的行 id，实现行级 loading（雪花 ID 用 string，见 §2.4）
+const [operatingId, setOperatingId] = useState<string | null>(null)
 
 const toggleMutation = useMutation({
-  mutationFn: ({ id, enable }: { id: number; enable: boolean }) =>
+  mutationFn: ({ id, enable }: { id: string; enable: boolean }) =>
     enable ? RegionApi.enable(id) : RegionApi.disable(id),
   onSuccess: (_, { enable }) => {
     queryClient.invalidateQueries({ queryKey: ['regions'] })
@@ -766,7 +812,7 @@ const toggleMutation = useMutation({
 
 ```tsx
 const deleteMutation = useMutation({
-  mutationFn: (id: number) => RegionApi.remove(id),
+  mutationFn: (id: string) => RegionApi.remove(id),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['regions'] })
     message.success('删除成功')
@@ -978,7 +1024,7 @@ import type { RegionTreeDto, RegionDto, CreateRegionDto } from '@/types/region'
 
 export const RegionApi = {
   /** 获取树形数据 */
-  getTree: (params?: { parentId?: number; includeChilds?: boolean }) =>
+  getTree: (params?: { parentId?: string; includeChilds?: boolean }) =>
     http.get<RegionTreeDto[]>(buildUrl('/Region/tree', params)),
 
   /** 关键词搜索（扁平列表） */
@@ -990,27 +1036,27 @@ export const RegionApi = {
     http.get<SelectOptionDto[]>(buildUrl('/Region/selector', { level, isIncludeZero })),
 
   /** 详情 */
-  getById: (id: number) =>
+  getById: (id: string) =>
     http.get<RegionDto>(`/Region/${id}`),
 
   /** 新增 */
   create: (data: CreateRegionDto) =>
-    http.post<number>('/Region', data),
+    http.post<string>('/Region', data),
 
   /** 编辑 */
-  update: (id: number, data: CreateRegionDto) =>
+  update: (id: string, data: CreateRegionDto) =>
     http.put<void>(`/Region/${id}`, data),
 
   /** 删除 */
-  remove: (id: number) =>
+  remove: (id: string) =>
     http.delete<void>(`/Region/${id}`),
 
   /** 启用 */
-  enable: (id: number) =>
+  enable: (id: string) =>
     http.put<void>(`/Region/Enable/${id}`, {}),
 
   /** 禁用 */
-  disable: (id: number) =>
+  disable: (id: string) =>
     http.put<void>(`/Region/Disable/${id}`, {}),
 }
 ```
@@ -1036,11 +1082,14 @@ src/types/
 
 **公共类型模板（`src/types/common.ts`）：**
 
+> **雪花 ID**：若选项 `value` 表示实体主键/外键（用户、角色、菜单等），类型应为 **`string`**，与 **§2.4** 一致；仅当业务确认为小范围整型（如枚举值）时才使用 `number`。
+
 ```typescript
 /** 选择器选项 */
 export interface SelectOptionDto {
   label: string
-  value: number
+  /** 实体 ID 为雪花时用 string，见 §2.4 */
+  value: string
 }
 
 /** 分页列表（X.PagedList 后端序列化格式，以实际响应为准） */
@@ -1108,4 +1157,4 @@ export enum Gender {
 
 *本文档随项目迭代持续更新，新增页面开发前必须阅读。*
 
-*最后更新：2026-03-06*
+*最后更新：2026-04-16*

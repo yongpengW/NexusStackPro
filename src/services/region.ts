@@ -19,11 +19,11 @@ export const RegionLevelLabels: Record<RegionLevel, string> = {
 // ─── DTO ─────────────────────────────────────────────────────────────────────
 
 export interface RegionDto {
-  id: number
+  id: string
   name: string
   shortName: string
   code: string
-  parentId: number
+  parentId: string
   level: RegionLevel
   order: number
   idSequences: string
@@ -42,7 +42,7 @@ export interface CreateRegionDto {
   code: string
   shortName?: string
   level: RegionLevel
-  parentId: number
+  parentId: string
   order: number
   isEnable: boolean
   remark?: string
@@ -50,14 +50,14 @@ export interface CreateRegionDto {
 
 export interface SelectOptionDto {
   label: string
-  value: number
+  value: string
   children?: SelectOptionDto[]
 }
 
 // ─── Query Params ─────────────────────────────────────────────────────────────
 
 export interface RegionTreeQueryDto {
-  parentId?: number
+  parentId?: string
   includeChilds?: boolean
 }
 
@@ -87,26 +87,26 @@ export const RegionApi = {
     http.get<SelectOptionDto[]>('/Region/treeSelector'),
 
   /** GET /api/Region/{id} — 单条详情（编辑回显用） */
-  getById: (id: number) =>
+  getById: (id: string) =>
     http.get<RegionDto>(`/Region/${id}`),
 
   /** POST /api/Region — 新增 */
   create: (data: CreateRegionDto) =>
-    http.post<number>('/Region', data),
+    http.post<string>('/Region', data),
 
   /** PUT /api/Region/{id} — 编辑 */
-  update: (id: number, data: CreateRegionDto) =>
+  update: (id: string, data: CreateRegionDto) =>
     http.put<void>(`/Region/${id}`, data),
 
   /** DELETE /api/Region/{id} — 删除 */
-  remove: (id: number) =>
+  remove: (id: string) =>
     http.delete<void>(`/Region/${id}`),
 
   /** PUT /api/Region/Enable/{id} — 启用 */
-  enable: (id: number) =>
+  enable: (id: string) =>
     http.put<void>(`/Region/Enable/${id}`, {}),
 
   /** PUT /api/Region/Disable/{id} — 禁用 */
-  disable: (id: number) =>
+  disable: (id: string) =>
     http.put<void>(`/Region/Disable/${id}`, {}),
 }

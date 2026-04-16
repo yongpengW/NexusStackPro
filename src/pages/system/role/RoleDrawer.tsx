@@ -28,7 +28,7 @@ import type { CreateRoleDto, RoleDto } from '@/services/role'
 
 interface RoleDrawerProps {
   open: boolean
-  editId?: number | null
+  editId?: string | null
   onClose: () => void
   onSuccess: () => void
 }
@@ -44,7 +44,7 @@ export function RoleDrawer({ open, editId, onClose, onSuccess }: RoleDrawerProps
 
   // ─── 编辑时获取详情 ───────────────────────────────────────────────────
   const detailQuery = useQuery({
-    queryKey: ROLE_QUERY_KEYS.detail(editId ?? 0),
+    queryKey: ROLE_QUERY_KEYS.detail(editId ?? ''),
     queryFn:  () => RoleApi.getById(editId!),
     enabled:  isEdit && open,
   })
@@ -84,7 +84,7 @@ export function RoleDrawer({ open, editId, onClose, onSuccess }: RoleDrawerProps
 
   const handleMutationSuccess = (msg: string) => {
     message.success(msg)
-    queryClient.invalidateQueries({ queryKey: ROLE_QUERY_KEYS.detail(editId ?? 0) })
+    queryClient.invalidateQueries({ queryKey: ROLE_QUERY_KEYS.detail(editId ?? '') })
     onSuccess()
   }
   const handleMutationError = (err: Error) => {
