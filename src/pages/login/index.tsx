@@ -23,29 +23,36 @@ import './index.css'
 
 type LoginType = 'account' | 'mobile'
 
-const LOGIN_REMEMBER_CREDENTIALS_KEY = 'login_remember_credentials'
+const LOGIN_REMEMBER_USERNAME_KEY = 'login_remember_username'
+const LEGACY_LOGIN_REMEMBER_CREDENTIALS_KEY = 'login_remember_credentials'
 
-function getSavedCredentials(): Partial<{ username: string; password: string; rememberPassword: boolean }> {
+function getSavedLoginValues(): Partial<{ username: string; rememberUsername: boolean }> {
   try {
-    const raw = localStorage.getItem(LOGIN_REMEMBER_CREDENTIALS_KEY)
-    if (!raw) return {}
-    const { username, password } = JSON.parse(raw) as { username?: string; password?: string }
-    if (!username) return {}
-    return { username, password: password ?? '', rememberPassword: true }
+    const username = localStorage.getItem(LOGIN_REMEMBER_USERNAME_KEY)
+    if (username) return { username, rememberUsername: true }
+
+    const legacyRaw = localStorage.getItem(LEGACY_LOGIN_REMEMBER_CREDENTIALS_KEY)
+    localStorage.removeItem(LEGACY_LOGIN_REMEMBER_CREDENTIALS_KEY)
+    if (!legacyRaw) return {}
+
+    const { username: legacyUsername } = JSON.parse(legacyRaw) as { username?: string }
+    if (!legacyUsername) return {}
+    saveUsername(legacyUsername)
+    return { username: legacyUsername, rememberUsername: true }
   } catch {
+    clearSavedUsername()
     return {}
   }
 }
 
-function saveCredentials(username: string, password: string) {
-  localStorage.setItem(
-    LOGIN_REMEMBER_CREDENTIALS_KEY,
-    JSON.stringify({ username, password }),
-  )
+function saveUsername(username: string) {
+  localStorage.setItem(LOGIN_REMEMBER_USERNAME_KEY, username)
+  localStorage.removeItem(LEGACY_LOGIN_REMEMBER_CREDENTIALS_KEY)
 }
 
-function clearSavedCredentials() {
-  localStorage.removeItem(LOGIN_REMEMBER_CREDENTIALS_KEY)
+function clearSavedUsername() {
+  localStorage.removeItem(LOGIN_REMEMBER_USERNAME_KEY)
+  localStorage.removeItem(LEGACY_LOGIN_REMEMBER_CREDENTIALS_KEY)
 }
 
 const encodePasswordToBase64 = (password: string) => {
@@ -66,7 +73,7 @@ type LoginFormValues = {
   username: string
   password: string
   autoLogin?: boolean
-  rememberPassword?: boolean
+  rememberUsername?: boolean
   mobile?: string
   captcha?: string
 }
@@ -114,10 +121,10 @@ function LoginPage() {
     // 仅当用户勾选“自动登录”时为 true；未勾选时表单可能不提交该字段(undefined)，需按 false 处理
     const autoLogin = values.autoLogin === true
     setRememberMe(autoLogin)
-    if (values.rememberPassword === true) {
-      saveCredentials(values.username, values.password)
+    if (values.rememberUsername === true) {
+      saveUsername(values.username)
     } else {
-      clearSavedCredentials()
+      clearSavedUsername()
     }
     const encodedPassword = encodePasswordToBase64(values.password)
     submitLogin({ userName: values.username, password: encodedPassword })
@@ -141,7 +148,7 @@ function LoginPage() {
             </span>
           }
           subTitle={t('pages.login.subTitle')}
-          initialValues={{ autoLogin: true, rememberPassword: false, ...getSavedCredentials() }}
+          initialValues={{ autoLogin: true, rememberUsername: false, ...getSavedLoginValues() }}
           loading={isPending}
           onFinish={async (values) => {
             handleSubmit(values as LoginFormValues)
@@ -220,8 +227,8 @@ function LoginPage() {
               {t('pages.login.rememberMe')}
             </ProFormCheckbox>
             {loginType === 'account' && (
-              <ProFormCheckbox noStyle name="rememberPassword" valuePropName="checked" style={{ marginLeft: 16 }}>
-                {t('pages.login.rememberPassword')}
+              <ProFormCheckbox noStyle name="rememberUsername" valuePropName="checked" style={{ marginLeft: 16 }}>
+                {t('pages.login.rememberUsername')}
               </ProFormCheckbox>
             )}
             <a

@@ -66,7 +66,7 @@ const zhCN = {
   'pages.login.phoneLogin.getVerificationCode': '获取验证码',
   'pages.getCaptchaSecondText': '秒后重新获取',
   'pages.login.rememberMe': '自动登录',
-  'pages.login.rememberPassword': '记住密码',
+  'pages.login.rememberUsername': '记住账号',
   'pages.login.forgotPassword': '忘记密码',
   'pages.login.forgotPasswordTip': '请联系管理员重置密码',
   'pages.login.loginWith': '其他登录方式',
