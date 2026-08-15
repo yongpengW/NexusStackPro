@@ -1,3 +1,5 @@
+
+
 # Nexus Stack Pro
 
 <div align="center">
@@ -83,6 +85,12 @@ npm run build:prod
 npm run preview
 npm run preview:test
 npm run preview:staging
+
+# 代码类型检查与 ESLint 扫描
+npm run check
+
+# 仅运行 ESLint 扫描与格式化
+npm run lint
 ```
 
 ---
